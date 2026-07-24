@@ -1,0 +1,1 @@
+ALTER TABLE `book_contents` ADD `play_order` integer NOT NULL;

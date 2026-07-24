@@ -1,0 +1,39 @@
+# Root level Git ignore rules for the RSVP project
+
+# Node dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build & Dev outputs
+.output/
+.nuxt/
+.nitro/
+.cache/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+out/
+
+# Local databases & logs
+*.db
+*.sqlite
+db.sqlite
+logs/
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local envs
+.env
+.env.*
+!.env.example
+
+.hermes
