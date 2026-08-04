@@ -130,8 +130,9 @@
     "submit": "Add and read",
     "tabPaste": "Paste text",
     "tabFile": "Upload file",
-    "fileLabel": "EPUB or TXT file",
-    "filePlaceholder": "Choose a .epub or .txt file",
+    "fileLabel": "EPUB, PDF or TXT file",
+    "filePlaceholder": "Choose a .epub, .pdf or .txt file",
+    "pdfConvertHint": "PDF files are converted to text by an external site (p2r3.github.io/convert). Open the converter in a new tab? Once converted, come back here and import the resulting .txt file.",
     "uploading": "Importing…",
     "upload": "Add file"
   },

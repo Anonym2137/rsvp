@@ -9,7 +9,8 @@
   "common": {
     "cancel": "Anuluj",
     "delete": "Usuń",
-    "error": "Błąd"
+    "error": "Błąd",
+    "done": "Gotowe"
   },
   "settings": {
     "title": "Ustawienia",
@@ -54,6 +55,9 @@
     "deleteTitle": "Usuń książkę",
     "deleteBody": "Czy na pewno chcesz usunąć tę książkę ze swojej biblioteki?",
     "completed": "Ukończono",
+    "book_one": "książka",
+    "book_other": "książek",
+    "delete": "Usuń",
     "readBook": "Czytaj {{title}}"
   },
   "explore": {
@@ -103,6 +107,8 @@
     "maxSpeed": "Maks. Prędkość",
     "books": "Książki",
     "streak": "Streak",
+    "ratings": "Oceny",
+    "noRatings": "Nie oceniłeś jeszcze żadnej książki. Oceń książkę po jej ukończeniu, aby pojawiła się tutaj.",
     "noData": "Brak danych",
     "noDataDesc": "Zacznij czytać, aby zobaczyć swoje statystyki.",
     "unit": {
@@ -125,6 +131,26 @@
     "loadingChapters": "Ładowanie rozdziałów…",
     "rewind": "-15s"
   },
+  "completion": {
+    "title": "Ukończono!",
+    "body": "Świetna robota — przeczytałeś „{{title}}”.",
+    "restart": "Czytaj ponownie",
+    "close": "Zamknij",
+    "ratePrompt": "Oceń tę książkę",
+    "shareStory": "Udostępnij na Stories",
+    "shareLoading": "Przygotowywanie…",
+    "shareNeedsDevBuild": "Udostępnianie wymaga dev builda. Zainstaluj build developerski, aby udostępniać na Instagram Stories.",
+    "shareUnavailable": "Wybrana aplikacja nie jest zainstalowana na tym urządzeniu.",
+    "shareCaption": "Właśnie skończyłem czytać „{{title}}” z RSVP Reader!",
+    "shareFailed": "Nie udało się udostępnić. Spróbuj ponownie.",
+    "share": {
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "twitter": "X",
+      "whatsapp": "WhatsApp",
+      "more": "Więcej…"
+    }
+  },
   "addBook": {
     "title": "Dodaj własny tekst",
     "bookTitle": "Tytuł",
@@ -134,7 +160,7 @@
     "submit": "Dodaj i czytaj",
     "epubTab": "Plik EPUB / TXT",
     "textTab": "Wklej tekst",
-    "fileDesc": "Wybierz plik .epub lub .txt z pamięci urządzenia. Zostanie sparsowany lokalnie.",
+    "fileDesc": "Wybierz plik .epub lub .txt z pamięci urządzenia. PDF konwertuj na tekst przez zewnętrzną stronę (p2r3.github.io/convert) i zaimportuj powstały .txt.",
     "chooseFile": "Wybierz plik…",
     "parsing": "Parsowanie pliku…",
     "saving": "Zapisywanie…",
@@ -142,6 +168,10 @@
     "unknownError": "Nieznany błąd",
     "titleContentRequired": "Tytuł i treść są wymagane.",
     "importError": "Nie udało się zaimportować pliku: {{message}}",
+    "pdfConvertTitle": "Konwersja PDF",
+    "pdfConvertBody": "Pliki PDF nie są parsowane w aplikacji. Otworzyć zewnętrzną stronę (p2r3.github.io/convert), która zamieni PDF na tekst? Po konwersji wróć tutaj i zaimportuj powstały plik .txt.",
+    "openConvert": "Otwórz konwerter",
+    "pdfEncrypted": "Ten plik PDF jest zaszyfrowany hasłem. Odszyfruj go wcześniej (np. darmowym narzędziem qpdf: „qpdf --decrypt --password HASŁO plik.pdf plik-odszyfrowany.pdf”) i spróbuj ponownie, najlepiej przez stronę konwersji.",
     "textError": "Nie udało się dodać tekstu: {{message}}"
   },
   "rsvpPlayer": {
@@ -150,5 +180,11 @@
     "pause": "Wstrzymaj",
     "reset": "Zresetuj RSVP",
     "readingSpeed": "Prędkość czytania"
+  },
+  "book": {
+    "read": "Czytaj",
+    "share": "Udostępnij relację",
+    "changeRating": "Zmień ocenę",
+    "delete": "Usuń książkę"
   }
 }

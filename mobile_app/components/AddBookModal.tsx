@@ -13,6 +13,9 @@ import { useTheme } from '../hooks/useTheme';
 import { parseEpubFile, parsePlainText } from '../services/epubParser';
 import * as db from '../db/database';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as WebBrowser from 'expo-web-browser';
+
+const PDF_CONVERTER_URL = 'https://p2r3.github.io/convert/';
 
 interface Props {
   visible: boolean;
@@ -44,7 +47,7 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
     onClose();
   };
 
-  // ── Pick EPUB from device ──────────────────────────────────────
+  // ── Pick EPUB / TXT from device ──────────────────────────────
   const handlePickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -55,12 +58,38 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
       if (result.canceled || !result.assets?.[0]) return;
 
       const asset = result.assets[0];
+
+      // PDF nie jest parsowany lokalnie — delegujemy konwersję na zewnętrzną
+      // stronę (https://p2r3.github.io/convert/), która zamienia PDF na TXT.
+      // Użytkownik konwertuje tam plik i wraca z gotowym .txt.
+      if (asset.name?.toLowerCase().endsWith('.pdf') || asset.mimeType === 'application/pdf') {
+        Alert.alert(
+          t('addBook.pdfConvertTitle'),
+          t('addBook.pdfConvertBody'),
+          [
+            { text: t('common.cancel'), style: 'cancel' },
+            {
+              text: t('addBook.openConvert'),
+              onPress: async () => {
+                try {
+                  await WebBrowser.openBrowserAsync(PDF_CONVERTER_URL);
+                } catch {
+                  Alert.alert(t('common.error'), t('explore.errorBrowser'));
+                }
+              },
+            },
+          ],
+        );
+        return;
+      }
+
       setIsLoading(true);
       setLoadingMessage(t('addBook.parsing'));
 
       const isEpub = asset.name?.toLowerCase().endsWith('.epub') || asset.mimeType?.includes('epub');
       const docDir = (FileSystem as any).documentDirectory || (FileSystem as any).cacheDirectory || '';
-      const tempLocalUri = `${docDir}temp_import_${Date.now()}.${isEpub ? 'epub' : 'txt'}`;
+      const ext = isEpub ? 'epub' : 'txt';
+      const tempLocalUri = `${docDir}temp_import_${Date.now()}.${ext}`;
 
       // Securely copy file from content:// provider to app's sandboxed documentDirectory
       await FileSystem.copyAsync({
@@ -95,7 +124,13 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
       onAdded(bookId);
     } catch (e: any) {
       console.error('Import failed:', e);
-      Alert.alert(t('common.error'), t('addBook.importError', { message: e?.message ?? t('addBook.unknownError') }));
+      const requiresPassword = e?.message === 'PDF_REQUIRES_PASSWORD' || /password/i.test(e?.message ?? '');
+      Alert.alert(
+        t('common.error'),
+        requiresPassword
+          ? t('addBook.pdfEncrypted')
+          : t('addBook.importError', { message: e?.message ?? t('addBook.unknownError') }),
+      );
       setIsLoading(false);
     }
   };

@@ -1,10 +1,12 @@
 /**
  * BookCard — compact book entry for list views.
- * Shows cover, title, author, progress bar, and delete button.
+ * Shows cover, title, author, progress bar, and (when rated) a star badge.
+ * Tapping a rated book opens the action sheet; long-pressing any book does too.
+ * Unrated books open the reader directly on tap.
  */
 import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
-import { BookOpen, Trash2 } from 'lucide-react-native';
+import { BookOpen, Star } from 'lucide-react-native';
 import ProgressBar from './ProgressBar';
 import { useTheme } from '../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
@@ -13,17 +15,24 @@ import type { Book } from '../types';
 interface Props {
   book: Book;
   onSelect: (id: number) => void;
-  onDelete?: (id: number) => void;
+  onOpenActions: (id: number) => void;
 }
 
-export default function BookCard({ book, onSelect, onDelete }: Props) {
+export default function BookCard({ book, onSelect, onOpenActions }: Props) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const rated = book.rating > 0;
+
+  const handlePress = () => {
+    if (rated) onOpenActions(book.id);
+    else onSelect(book.id);
+  };
 
   return (
     <View style={styles.cardWrapper}>
       <Pressable
-        onPress={() => onSelect(book.id)}
+        onPress={handlePress}
+        onLongPress={() => onOpenActions(book.id)}
         style={({ pressed }) => [
           styles.container,
           {
@@ -41,6 +50,11 @@ export default function BookCard({ book, onSelect, onDelete }: Props) {
           ) : (
             <BookOpen size={24} color={colors.subtleFg} />
           )}
+          {rated && (
+            <View style={[styles.ratedBadge, { backgroundColor: colors.primary }]}>
+              <Star size={10} color={colors.primaryFg} fill={colors.primaryFg} />
+            </View>
+          )}
         </View>
 
         {/* Info */}
@@ -55,7 +69,9 @@ export default function BookCard({ book, onSelect, onDelete }: Props) {
           </View>
           <View style={styles.progressContainer}>
             <View style={styles.progressRow}>
-              <Text style={[styles.progressLabel, { color: colors.mutedFg }]}>{t('library.completed')}</Text>
+              <Text style={[styles.progressLabel, { color: colors.mutedFg }]}>
+                {rated ? `${t('library.completed')} · ${book.rating}/5` : t('library.completed')}
+              </Text>
               <Text style={[styles.progressValue, { color: colors.foreground }]}>
                 {book.progress}%
               </Text>
@@ -64,23 +80,6 @@ export default function BookCard({ book, onSelect, onDelete }: Props) {
           </View>
         </View>
       </Pressable>
-
-      {/* Delete Button */}
-      {onDelete && (
-        <Pressable
-          onPress={() => onDelete(book.id)}
-          style={({ pressed }) => [
-            styles.deleteBtn,
-            {
-              backgroundColor: colors.surface2,
-              borderColor: colors.border,
-              opacity: pressed ? 0.7 : 1,
-            },
-          ]}
-        >
-          <Trash2 size={16} color={colors.accentRed} />
-        </Pressable>
-      )}
     </View>
   );
 }
@@ -96,7 +95,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     gap: 16,
-    paddingRight: 50, // leave space for delete button
   },
   coverWrap: {
     width: 64,
@@ -111,6 +109,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
+  },
+  ratedBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   info: {
     flex: 1,
@@ -143,17 +151,5 @@ const styles = StyleSheet.create({
   progressValue: {
     fontSize: 10,
     fontWeight: '600',
-  },
-  deleteBtn: {
-    position: 'absolute',
-    right: 12,
-    top: '50%',
-    marginTop: -18,
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

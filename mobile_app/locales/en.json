@@ -9,7 +9,8 @@
   "common": {
     "cancel": "Cancel",
     "delete": "Delete",
-    "error": "Error"
+    "error": "Error",
+    "done": "Done"
   },
   "settings": {
     "title": "Settings",
@@ -54,6 +55,9 @@
     "deleteTitle": "Delete book",
     "deleteBody": "Are you sure you want to remove this book from your library?",
     "completed": "Completed",
+    "book_one": "book",
+    "book_other": "books",
+    "delete": "Delete",
     "readBook": "Read {{title}}"
   },
   "explore": {
@@ -103,6 +107,8 @@
     "maxSpeed": "Max Speed",
     "books": "Books",
     "streak": "Streak",
+    "ratings": "Ratings",
+    "noRatings": "You haven't rated any books yet. Rate a book when you finish it to see it here.",
     "noData": "No data",
     "noDataDesc": "Start reading to see your stats.",
     "unit": {
@@ -125,6 +131,26 @@
     "loadingChapters": "Loading chapters…",
     "rewind": "-15s"
   },
+  "completion": {
+    "title": "Finished!",
+    "body": "Nice work — you read „{{title}}”.",
+    "restart": "Read again",
+    "close": "Close",
+    "ratePrompt": "Rate this book",
+    "shareStory": "Share to Stories",
+    "shareLoading": "Preparing…",
+    "shareNeedsDevBuild": "Sharing needs a dev build. Install the development build to share to Instagram Stories.",
+    "shareUnavailable": "The selected app isn't installed on this device.",
+    "shareCaption": "I just finished „{{title}}” with RSVP Reader!",
+    "shareFailed": "Couldn't share right now. Try again.",
+    "share": {
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "twitter": "X",
+      "whatsapp": "WhatsApp",
+      "more": "More…"
+    }
+  },
   "addBook": {
     "title": "Add custom text",
     "bookTitle": "Title",
@@ -134,7 +160,7 @@
     "submit": "Add and read",
     "epubTab": "EPUB / TXT file",
     "textTab": "Paste text",
-    "fileDesc": "Choose a .epub or .txt file from your device. It will be parsed locally.",
+    "fileDesc": "Choose a .epub or .txt file from your device. Convert PDFs to text via the external site (p2r3.github.io/convert) and import the resulting .txt.",
     "chooseFile": "Choose file…",
     "parsing": "Parsing file…",
     "saving": "Saving…",
@@ -142,6 +168,10 @@
     "unknownError": "Unknown error",
     "titleContentRequired": "Title and content are required.",
     "importError": "Failed to import file: {{message}}",
+    "pdfConvertTitle": "Convert PDF",
+    "pdfConvertBody": "PDF files aren't parsed in the app. Open the external site (p2r3.github.io/convert) that turns a PDF into text? Once converted, come back here and import the resulting .txt file.",
+    "openConvert": "Open converter",
+    "pdfEncrypted": "This PDF is password-protected. Decrypt it first (e.g. with the free qpdf tool: \"qpdf --decrypt --password PASSWORD file.pdf decrypted.pdf\") and try again, preferably via the conversion site.",
     "textError": "Failed to add text: {{message}}"
   },
   "rsvpPlayer": {
@@ -150,5 +180,11 @@
     "pause": "Pause",
     "reset": "Reset RSVP",
     "readingSpeed": "Reading speed"
+  },
+  "book": {
+    "read": "Read",
+    "share": "Share to Stories",
+    "changeRating": "Change rating",
+    "delete": "Delete book"
   }
 }

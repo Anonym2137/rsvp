@@ -15,8 +15,6 @@ This repository is organized as a monorepo containing two independent applicatio
 
 ## 📸 Screenshots
 
-> Add real screenshots at `assets/web_reader.png`, `assets/mobile_reader.png`, and `assets/stats_dashboard.png` to populate the gallery below.
-
 | Web Reader | Mobile Reader | Stats Dashboard |
 |---|---|---|
 | ![Web Reader](./assets/web_reader.png) | ![Mobile Reader](./assets/mobile_reader.png) | ![Stats Dashboard](./assets/stats_dashboard.png) |
@@ -38,7 +36,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch naming, commit message forma
 *   **Quick Rewind**: A dedicated button to rewind exactly **15 seconds** of reading time (dynamically calculated based on WPM) if you lose focus.
 
 ### Book Search & Import
-*   **Online Search**: Search Anna's Archive directly from the app by **title, author, language, format, and sort options**. Results open the book's Anna's Archive download page in your browser, where you download the file and import it locally — no server-side fetching of copyrighted files.
+*   **Online Search**: Search Anna's Archive directly from the app by **title, author, language, format, and sort options**. The **web app** performs a server-side query to Anna's Archive to populate results (the book *file* itself is never fetched or stored by this project — you download it yourself in your browser and import it locally). The **mobile app** queries Anna's Archive from the device and opens the download page in your browser.
 *   **On-Device File Parser**: Import local `.epub` and `.txt` files directly. The files are parsed entirely on-device (no servers required!).
 *   **Manual Text Entry**: Paste articles or custom text clips directly into the library.
 
@@ -129,6 +127,14 @@ Unit tests are written using **Bun's native test runner** to verify backend HTML
 cd web_app
 bun test
 ```
+
+---
+
+## ⚠️ Legal & Disclaimer
+
+This project includes optional integration with **Anna's Archive** for book *metadata search only*. It does **not** host, fetch, or redistribute any copyrighted files — the actual book files are obtained by the user directly from the source in their own browser.
+
+Users are responsible for complying with applicable copyright law in their jurisdiction. The maintainers of this project do not endorse or facilitate copyright infringement.
 
 ---
 

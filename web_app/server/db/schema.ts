@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text, uniqueIndex, check } from "drizzle-orm/sqlite-core";
 
 
 export const booksTable = sqliteTable("books", {
@@ -34,4 +34,19 @@ export const readingSessionTable = sqliteTable("reading_session", {
    wpm: int().notNull(),
    wordsRead: int("words_read").notNull(),
    createdAt: int("created_at", {mode: 'timestamp'}).default(sql`(strftime('%s', 'now'))`).notNull(),
-}) 
+})
+
+export const bookRatingsTable = sqliteTable(
+  "book_ratings",
+  {
+    id: int().primaryKey({autoIncrement: true}),
+    bookId: int("book_id").notNull().references(() => booksTable.id, {onDelete: "cascade"}),
+    rating: int().notNull(),
+    review: text(),
+    updatedAt: int("updated_at", {mode: 'timestamp'}).default(sql`(strftime('%s', 'now'))`).notNull(),
+  },
+  (table) => [
+    uniqueIndex("book_ratings_book_id_unique").on(table.bookId),
+    check("rating_range", sql`${table.rating} >= 1 AND ${table.rating} <= 10`),
+  ],
+)

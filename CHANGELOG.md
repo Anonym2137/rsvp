@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.0.0] - 2026-08-03
+
+### Added
+- **Book Ratings**: Star ratings + optional review text stored per book (web `books/custom.post.ts`, `server/db/schema.ts`; mobile `db/database.ts`).
+- **Custom Text / Article Import**: Paste articles or custom text clips directly into the library (web `AddBookModal.vue`, mobile `AddBookModal.tsx`).
+- **Improved EPUB + HTML pipeline**: `clean_html_to_plain_text.ts` HTML sanitizer/cleaner with dedicated unit tests; EPUB guide normalization.
+- **Test coverage**: `clean_html_to_plain_text.test.ts`, `epub_guide_normalize.test.ts`, `import_transaction.test.ts` (web, bun); `database.test.ts` + `epubParser.test.ts` (mobile, jest).
+
+### Changed
+- README "Online Search" description corrected to reflect server-side metadata query (no file hosting/redistribution).
+- Added Legal & Disclaimer section to README.
+
+### Housekeeping
+- Publication hygiene: removed stray debug scripts, unused test fixtures, copyrighted book downloads, and a browser `.har` archive from the working tree; reconciled mobile lockfile with the npm-based setup.
+
+---
+
 ## [1.0.0] - 2026-07-21
 
 Initial release of the RSVP Speed Reader ecosystem (Web & Mobile).

@@ -9,7 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { useLibrary } from '../../hooks/useLibrary';
 import BookCard from '../../components/BookCard';
+import BookActionSheet from '../../components/BookActionSheet';
 import AddBookModal from '../../components/AddBookModal';
+import * as db from '../../db/database';
+import type { Book } from '../../types';
 
 export default function LibraryScreen() {
   const { t } = useTranslation();
@@ -20,6 +23,8 @@ export default function LibraryScreen() {
   const [query, setQuery] = useState('');
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionBook, setActionBook] = useState<Book | null>(null);
+  const [actionVisible, setActionVisible] = useState(false);
 
   const filteredBooks = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -34,6 +39,12 @@ export default function LibraryScreen() {
     router.push(`/reader/${id}`);
   }, [selectBook, router]);
 
+  const handleOpenActions = useCallback((id: number) => {
+    const book = books.find((b) => b.id === id) ?? null;
+    setActionBook(book);
+    setActionVisible(true);
+  }, [books]);
+
   const handleDeleteBook = useCallback((id: number) => {
     Alert.alert(
       t('library.deleteTitle'),
@@ -44,6 +55,15 @@ export default function LibraryScreen() {
       ]
     );
   }, [removeBook, t]);
+
+  const handleChangeRating = useCallback(async (id: number, rating: number) => {
+    try {
+      await db.updateBookRating(id, rating);
+      await refreshBooks();
+    } catch (e) {
+      console.error('Failed to update rating:', e);
+    }
+  }, [refreshBooks]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -92,7 +112,7 @@ export default function LibraryScreen() {
           <BookCard
             book={item}
             onSelect={handleSelect}
-            onDelete={handleDeleteBook}
+            onOpenActions={handleOpenActions}
           />
         )}
         contentContainerStyle={styles.listContainer}
@@ -133,6 +153,15 @@ export default function LibraryScreen() {
           await selectBook(id);
           router.push(`/reader/${id}`);
         }}
+      />
+
+      <BookActionSheet
+        book={actionBook}
+        visible={actionVisible}
+        onClose={() => setActionVisible(false)}
+        onRead={handleSelect}
+        onChangeRating={handleChangeRating}
+        onDelete={handleDeleteBook}
       />
     </SafeAreaView>
   );

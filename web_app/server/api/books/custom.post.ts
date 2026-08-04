@@ -70,6 +70,7 @@ export default defineEventHandler(async (e) => {
       );
     }
 
+    if (!book) throw new Error("Nie udało się zapisać książki");
     return book;
   } finally {
     if (tmpPath) {

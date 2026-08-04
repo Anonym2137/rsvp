@@ -6,6 +6,9 @@ export interface Book {
   cover: string | null;
   progress: number;
   wordIndex: number;
+  isFinished: boolean;
+  /** User star rating 0 (none) – 5 */
+  rating: number;
 }
 
 /** A chapter of a book stored in SQLite */

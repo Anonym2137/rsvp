@@ -2,13 +2,14 @@
   "expo": {
     "name": "rsvp reader",
     "slug": "mobile_app",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobileapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonym.rsvpreader"
     },
     "android": {
       "package": "com.anonym.rsvpreader",
@@ -27,6 +28,10 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-share",
+        {}
+      ],
       [
         "expo-splash-screen",
         {

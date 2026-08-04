@@ -47,6 +47,7 @@ export function useRsvp({
   const [isPlaying, setIsPlaying] = useState(false);
   const [wordIndex, setWordIndex] = useState(initialWordIndex);
   const [showFixation, setShowFixation] = useState(initialShowFixation);
+  const [isFinished, setIsFinished] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sessionStartRef = useRef<number | null>(null);
@@ -71,14 +72,18 @@ export function useRsvp({
 
   // ── Formatted word ───────────────────────────────────────────────
   const formattedWord = useMemo<FormattedWord>(() => {
-    if (wordIndex === 0 && !isPlaying) {
+    if (wordIndex === 0 && !isPlaying && !isFinished) {
       return { part1: 'Naciśnij ', focus: 'Czytaj', part2: ' aby zacząć', isIntro: true };
     }
     if (wordIndex >= words.length) {
+      // Keep the last word visible behind the celebration overlay
+      if (words.length > 0) {
+        return splitWordAtOrp(words[words.length - 1], showFixation);
+      }
       return { part1: 'Koniec', focus: '!', part2: '', isIntro: false };
     }
     return splitWordAtOrp(words[wordIndex], showFixation);
-  }, [wordIndex, isPlaying, words, showFixation]);
+  }, [wordIndex, isPlaying, isFinished, words, showFixation]);
 
   // ── Sync wordIndex when book selection loads or changes ──────────
   const initialWordIndexRef = useRef(initialWordIndex);
@@ -134,10 +139,11 @@ export function useRsvp({
     timerRef.current = setInterval(() => {
       setWordIndex((prev) => {
         if (prev >= words.length) {
-          // Reached the end
+          // Reached the end — celebrate instead of silently looping back
           pause();
-          onProgressUpdate?.(0, 0);
-          return 0;
+          setIsFinished(true);
+          onProgressUpdate?.(100, words.length);
+          return prev;
         }
         const next = prev + 1;
         const pct = (next / words.length) * 100;
@@ -157,6 +163,7 @@ export function useRsvp({
 
   const reset = useCallback(() => {
     pause();
+    setIsFinished(false);
     setWordIndex(0);
     onProgressUpdate?.(0, 0);
   }, [pause, onProgressUpdate]);
@@ -169,6 +176,16 @@ export function useRsvp({
       return next;
     });
   }, [words.length, onProgressUpdate]);
+
+  // ── Restart after finishing (back to the start for a re-read) ─────
+  const restart = useCallback(() => {
+    setIsFinished(false);
+    setWordIndex(0);
+  }, []);
+
+  const dismissFinish = useCallback(() => {
+    setIsFinished(false);
+  }, []);
 
   // ── Restart timer when speed changes during playback ─────────────
   useEffect(() => {
@@ -204,10 +221,13 @@ export function useRsvp({
     words,
     progress,
     formattedWord,
+    isFinished,
     play,
     pause,
     toggle,
     reset,
     rewind,
+    restart,
+    dismissFinish,
   };
 }

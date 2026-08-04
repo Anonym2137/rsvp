@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BarChart2 } from 'lucide-react-native';
+import { BarChart2, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import StatCard from '../../components/StatCard';
+import StarRating from '../../components/StarRating';
 import * as db from '../../db/database';
+import type { RatedBook } from '../../db/database';
 import type { Stats } from '../../types';
 
 export default function StatsScreen() {
@@ -18,6 +20,7 @@ export default function StatsScreen() {
     streak: 0,
     totalWordsRead: 0,
   });
+  const [ratedBooks, setRatedBooks] = useState<RatedBook[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadStats = useCallback(async () => {
@@ -26,6 +29,12 @@ export default function StatsScreen() {
       setStats(data);
     } catch (e) {
       console.error('Failed to load stats:', e);
+    }
+    try {
+      const rated = await db.getRatedBooks();
+      setRatedBooks(rated);
+    } catch (e) {
+      console.error('Failed to load rated books:', e);
     }
   }, []);
 
@@ -93,6 +102,52 @@ export default function StatsScreen() {
           </View>
         </View>
 
+        {/* Ratings overview */}
+        <View style={styles.ratingsSection}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+            {t('stats.ratings')}
+          </Text>
+
+          {ratedBooks.length === 0 ? (
+            <View style={[styles.ratingsEmpty, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Star size={28} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 8 }} />
+              <Text style={[styles.ratingsEmptyText, { color: colors.mutedFg }]}>
+                {t('stats.noRatings')}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.ratingsList}>
+              {ratedBooks.map((b) => (
+                <View
+                  key={b.id}
+                  style={[styles.ratedItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  {b.cover ? (
+                    <Image source={{ uri: b.cover }} style={styles.ratedCover} resizeMode="cover" />
+                  ) : (
+                    <View style={[styles.ratedCoverFallback, { backgroundColor: colors.surface3 }]}>
+                      <Text style={[styles.ratedCoverFallbackText, { color: colors.primary }]}>
+                        {(b.title || '?').charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.ratedInfo}>
+                    <Text style={[styles.ratedTitle, { color: colors.foreground }]} numberOfLines={1}>
+                      {b.title}
+                    </Text>
+                    <Text style={[styles.ratedAuthor, { color: colors.mutedFg }]} numberOfLines={1}>
+                      {b.author}
+                    </Text>
+                    <View style={styles.ratedStars}>
+                      <StarRating value={b.rating} onChange={() => {}} size={16} />
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         {/* Empty state when no reading time */}
         {stats.totalMinutes === 0 && (
           <View style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -136,6 +191,67 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: '48%',
+  },
+  ratingsSection: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  ratingsEmpty: {
+    borderRadius: 20,
+    padding: 28,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  ratingsEmptyText: {
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  ratingsList: {
+    gap: 10,
+  },
+  ratedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 10,
+  },
+  ratedCover: {
+    width: 44,
+    height: 64,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  ratedCoverFallback: {
+    width: 44,
+    height: 64,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratedCoverFallbackText: {
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  ratedInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  ratedTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  ratedAuthor: {
+    fontSize: 11,
+  },
+  ratedStars: {
+    marginTop: 2,
   },
   emptyBox: {
     borderRadius: 24,

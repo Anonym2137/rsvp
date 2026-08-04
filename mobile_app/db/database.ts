@@ -46,7 +46,9 @@ async function initTables(db: SQLite.SQLiteDatabase) {
       author TEXT NOT NULL DEFAULT 'Nieznany',
       cover TEXT DEFAULT NULL,
       progress INTEGER DEFAULT 0,
-      word_index INTEGER DEFAULT 0
+      word_index INTEGER DEFAULT 0,
+      is_finished INTEGER DEFAULT 0,
+      rating INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS book_chapters (
@@ -75,6 +77,20 @@ async function initTables(db: SQLite.SQLiteDatabase) {
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
     );
   `);
+
+  // Migration: add is_finished to already-installed databases (idempotent).
+  // CREATE TABLE IF NOT EXISTS above only creates the table on fresh installs;
+  // existing databases with a books table need the column added explicitly.
+  try {
+    await db.execAsync('ALTER TABLE books ADD COLUMN is_finished INTEGER DEFAULT 0');
+  } catch (e) {
+    // Column already exists — safe to ignore.
+  }
+  try {
+    await db.execAsync('ALTER TABLE books ADD COLUMN rating INTEGER DEFAULT 0');
+  } catch (e) {
+    // Column already exists — safe to ignore.
+  }
 }
 
 // ── Web Fallback Memory / AsyncStorage Store ───────────────────────
@@ -127,7 +143,7 @@ export async function insertBook(title: string, author: string, cover: string | 
   if (IS_WEB) {
     const books = await getAllBooks();
     const newId = Date.now();
-    const newBook: Book = { id: newId, title, author, cover, progress: 0, wordIndex: 0 };
+    const newBook: Book = { id: newId, title, author, cover, progress: 0, wordIndex: 0, isFinished: false, rating: 0 };
     books.unshift(newBook);
     await setWebStorage(WEB_BOOKS_KEY, books);
     return newId;
@@ -142,12 +158,16 @@ export async function insertBook(title: string, author: string, cover: string | 
 }
 
 export async function updateBookProgress(id: number, progress: number, wordIndex: number): Promise<void> {
+  const roundedProgress = Math.round(progress);
+  const finished = progress >= 100;
+
   if (IS_WEB) {
     const books = await getAllBooks();
     const b = books.find((x) => x.id === id);
     if (b) {
-      b.progress = Math.round(progress);
+      b.progress = roundedProgress;
       b.wordIndex = wordIndex;
+      b.isFinished = finished;
       await setWebStorage(WEB_BOOKS_KEY, books);
     }
     return;
@@ -155,8 +175,45 @@ export async function updateBookProgress(id: number, progress: number, wordIndex
   const db = await getDatabase();
   if (!db) return;
   await db.runAsync(
-    'UPDATE books SET progress = ?, word_index = ? WHERE id = ?',
-    [Math.round(progress), wordIndex, id]
+    'UPDATE books SET progress = ?, word_index = ?, is_finished = ? WHERE id = ?',
+    [roundedProgress, wordIndex, finished ? 1 : 0, id]
+  );
+}
+
+export async function updateBookFinished(id: number, isFinished: boolean): Promise<void> {
+  if (IS_WEB) {
+    const books = await getAllBooks();
+    const b = books.find((x) => x.id === id);
+    if (b) {
+      b.isFinished = isFinished;
+      await setWebStorage(WEB_BOOKS_KEY, books);
+    }
+    return;
+  }
+  const db = await getDatabase();
+  if (!db) return;
+  await db.runAsync(
+    'UPDATE books SET is_finished = ? WHERE id = ?',
+    [isFinished ? 1 : 0, id]
+  );
+}
+
+export async function updateBookRating(id: number, rating: number): Promise<void> {
+  const clamped = Math.max(0, Math.min(5, Math.round(rating)));
+  if (IS_WEB) {
+    const books = await getAllBooks();
+    const b = books.find((x) => x.id === id);
+    if (b) {
+      b.rating = clamped;
+      await setWebStorage(WEB_BOOKS_KEY, books);
+    }
+    return;
+  }
+  const db = await getDatabase();
+  if (!db) return;
+  await db.runAsync(
+    'UPDATE books SET rating = ? WHERE id = ?',
+    [clamped, id]
   );
 }
 
@@ -180,6 +237,8 @@ function rowToBook(row: any): Book {
     cover: row.cover,
     progress: row.progress ?? 0,
     wordIndex: row.word_index ?? 0,
+    isFinished: row.is_finished === 1,
+    rating: row.rating ?? 0,
   };
 }
 
@@ -401,4 +460,36 @@ export async function getStats(): Promise<Stats> {
     streak,
     totalWordsRead: session?.total_words ?? 0,
   };
+}
+
+// ── Rated books (ratings overview) ──────────────────────────────
+
+export interface RatedBook {
+  id: number;
+  title: string;
+  author: string;
+  cover: string | null;
+  rating: number;
+}
+
+export async function getRatedBooks(): Promise<RatedBook[]> {
+  if (IS_WEB) {
+    const books = await getAllBooks();
+    return books
+      .filter((b) => b.rating > 0)
+      .map((b) => ({ id: b.id, title: b.title, author: b.author, cover: b.cover, rating: b.rating }))
+      .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+  }
+  const db = await getDatabase();
+  if (!db) return [];
+  const rows = await db.getAllAsync<any>(
+    'SELECT id, title, author, cover, rating FROM books WHERE rating > 0 ORDER BY rating DESC, title ASC'
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    author: row.author,
+    cover: row.cover,
+    rating: row.rating ?? 0,
+  }));
 }

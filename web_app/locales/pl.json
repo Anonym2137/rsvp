@@ -130,8 +130,9 @@
     "submit": "Dodaj i czytaj",
     "tabPaste": "Wklej tekst",
     "tabFile": "Wgraj plik",
-    "fileLabel": "Plik EPUB lub TXT",
-    "filePlaceholder": "Wybierz plik .epub lub .txt",
+    "fileLabel": "Plik EPUB, PDF lub TXT",
+    "filePlaceholder": "Wybierz plik .epub, .pdf lub .txt",
+    "pdfConvertHint": "Pliki PDF są konwertowane na tekst przez zewnętrzną stronę (p2r3.github.io/convert). Otworzyć konwerter w nowej karcie? Po konwersji wróć tutaj i zaimportuj powstały plik .txt.",
     "uploading": "Importowanie…",
     "upload": "Dodaj plik"
   },

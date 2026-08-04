@@ -10,7 +10,9 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 import { useLibrary } from '../../hooks/useLibrary';
 import { useRsvp } from '../../hooks/useRsvp';
+import * as db from '../../db/database';
 import RsvpWord from '../../components/RsvpWord';
+import CompletionCelebration from '../../components/CompletionCelebration';
 
 export default function ReaderScreen() {
   const { t } = useTranslation();
@@ -19,6 +21,14 @@ export default function ReaderScreen() {
   const params = useLocalSearchParams<{ id: string }>();
 
   const { currentBook, chapters, isLoadingChapters, updateProgress, settings } = useLibrary();
+
+  const handleRate = (rating: number) => {
+    if (currentBook) {
+      db.updateBookRating(currentBook.id, rating).catch((e) =>
+        console.error('Failed to save rating:', e)
+      );
+    }
+  };
 
   const rsvp = useRsvp({
     currentText: chapters.map((c) => c.content).join(' '),
@@ -193,6 +203,18 @@ export default function ReaderScreen() {
           </View>
         </View>
       )}
+
+      <CompletionCelebration
+        visible={rsvp.isFinished}
+        bookId={currentBook?.id ?? null}
+        bookTitle={currentBook?.title ?? ''}
+        bookAuthor={currentBook?.author ?? ''}
+        bookCover={currentBook?.cover ?? null}
+        initialRating={currentBook?.rating ?? 0}
+        onRate={handleRate}
+        onRestart={rsvp.restart}
+        onClose={rsvp.dismissFinish}
+      />
     </SafeAreaView>
   );
 }
@@ -356,6 +378,7 @@ const styles = StyleSheet.create({
   slider: {
     width: '100%',
     height: 32,
+    zIndex: 1,
   },
   controlsRow: {
     flexDirection: 'row',

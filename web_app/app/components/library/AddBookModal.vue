@@ -27,9 +27,23 @@ const activeTab = ref<'paste' | 'file'>('paste')
 const file = ref<File | null>(null)
 const isUploading = ref(false)
 
+// PDF-y nie parsujemy lokalnie — delegujemy konwersję na zewnętrzną
+// stronę (https://p2r3.github.io/convert/), która zamienia PDF na TXT.
+// Użytkownik konwertuje tam plik i importuje gotowy .txt z powrotem.
+const PDF_CONVERTER_URL = 'https://p2r3.github.io/convert/'
+
 function handleFileChange(e: Event) {
   const input = e.target as HTMLInputElement
-  file.value = input.files?.[0] ?? null
+  const picked = input.files?.[0] ?? null
+  if (picked && picked.name.toLowerCase().endsWith('.pdf')) {
+    if (confirm(t('addBook.pdfConvertHint'))) {
+      window.open(PDF_CONVERTER_URL, '_blank', 'noopener')
+    }
+    // Zostaw pole puste — użytkownik wróci z plikiem .txt.
+    input.value = ''
+    return
+  }
+  file.value = picked
 }
 
 async function submitPaste() {
@@ -143,7 +157,7 @@ async function uploadFile() {
           <input
             id="book-file"
             type="file"
-            accept=".epub,.txt"
+            accept=".epub,.pdf,.txt"
             class="block w-full text-xs text-foreground file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-fg file:cursor-pointer bg-background border border-border rounded-xl"
             @change="handleFileChange"
           />
