@@ -69,18 +69,18 @@ export default function ExploreScreen() {
   };
 
   const handleOpenDownloadPage = async (book: SearchResult) => {
-    const slowDownloadUrl = `https://annas-archive.gl/slow_download/${book.id}/0/0`;
+    const bookPageUrl = `https://z-lib.gl${book.id}`;
 
     Alert.alert(
       'Pobieranie książki',
-      'Z powodu zabezpieczeń serwera pobierania (Cloudflare), otworzymy stronę w przeglądarce telefonu. \n\n1. Pobierz plik na telefon.\n2. Wróć do aplikacji i dodaj go w zakładce "Biblioteka" za pomocą "Wybierz plik".',
+      'Otworzymy stronę książki w przeglądarce telefonu. \n\n1. Pobierz plik na telefon.\n2. Wróć do aplikacji i dodaj go w zakładce "Biblioteka" za pomocą "Wybierz plik".',
       [
         { text: 'Anuluj', style: 'cancel' },
         {
           text: 'Otwórz pobieranie',
           onPress: async () => {
             try {
-              await WebBrowser.openBrowserAsync(slowDownloadUrl);
+              await WebBrowser.openBrowserAsync(bookPageUrl);
             } catch (err) {
               console.error('Failed to open browser:', err);
               Alert.alert('Błąd', 'Nie można otworzyć przeglądarki.');
