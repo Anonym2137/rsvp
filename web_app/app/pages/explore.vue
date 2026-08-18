@@ -31,7 +31,7 @@ const selectedSort = ref('')
 const selectedLang = ref('')
 const selectedFormat = ref('epub')
 
-// ─── Online search (Anna's Archive, server-side fetch + parse) ─────
+// ─── Online search (z-lib.gl, server-side fetch + parse) ─────
 const isLoading = ref(false)
 const searchResults = ref<SearchResult[]>([])
 const searchExecuted = ref(false)
@@ -89,10 +89,10 @@ function handleSelectLocal(id: number) {
   router.push(`/reader/${id}`)
 }
 
-// Open the Anna's Archive download page in a new browser tab — the user
+// Open the z-lib book page in a new browser tab — the user
 // downloads the file manually and imports it locally (mirrors the mobile app).
 function handleOpenDownloadPage(book: SearchResult) {
-  const url = `https://annas-archive.gl/slow_download/${book.id}/0/0`
+  const url = `https://z-lib.gl${book.id}`
   window.open(url, '_blank', 'noopener')
 }
 
