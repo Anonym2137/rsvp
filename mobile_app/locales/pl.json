@@ -152,6 +152,10 @@
     }
   },
   "addBook": {
+    "onlineTab": "Książki online",
+    "onlineDesc": "Znajdź książkę online i pobierz ją bezpośrednio do biblioteki. Dostęp do plików telefonu nie jest potrzebny.",
+    "searchBooks": "Szukaj książek",
+
     "title": "Dodaj własny tekst",
     "bookTitle": "Tytuł",
     "bookTitlePlaceholder": "Np. Artykuł o AI",
@@ -186,5 +190,18 @@
     "share": "Udostępnij relację",
     "changeRating": "Zmień ocenę",
     "delete": "Usuń książkę"
+  },
+  "searchVerification": {
+    "wait": "Weryfikacja przeglądarki — poczekaj lub wykonaj polecenia strony.",
+    "nextMirror": "Spróbuj innego lustra"
+  },
+  "bookDownload": {
+    "htmlResponse": "Serwer zwrócił stronę zamiast książki. Ukończ weryfikację przeglądarki i spróbuj ponownie.",
+    "supportedFormats": "Czytnik obsługuje pliki EPUB i TXT. Wybierz jeden z tych formatów.",
+    "invalidUrl": "Ten link do pobrania nie jest obsługiwany.",
+    "failed": "Nie udało się pobrać lub zaimportować książki: {{message}}",
+    "hint": "Pobierz EPUB lub TXT, aby dodać książkę bezpośrednio do biblioteki",
+    "progress": "Pobieranie i importowanie…",
+    "importHint": "Książka pojawi się w bibliotece po zakończeniu importu."
   }
 }

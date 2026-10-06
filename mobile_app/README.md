@@ -94,6 +94,26 @@ Transfer/install the APK on any compatible phone.
 
 ---
 
+## Adding books
+
+Use **Add book → Online books → Search books**, select a result, and download an
+EPUB or TXT in the in-app browser. The reader downloads to its private cache,
+imports the chapters into the library, and removes the temporary file. Use
+**Read now** after import to open it. Alternatively, use **Add book → EPUB / TXT**
+to select a file from phone storage; the system picker grants access and copies
+it into the app cache for import. Pasting custom text remains available.
+
+EPUB covers are read from EPUB 2 metadata, EPUB 3 cover-image declarations, or
+cover pages. Online imports use the selected search thumbnail if the EPUB has
+no embedded cover.
+
+Android uses `ReaderWebViewPackage` to route browser download events to the
+importer, including links with filenames supplied through Content-Disposition.
+The Expo config plugin `plugins/withReaderDownloads.js` registers it and copies
+the native source when regenerating the Android project.
+
+---
+
 ## Internationalization (i18n)
 
 The UI is localized with **i18next** + **react-i18next**:

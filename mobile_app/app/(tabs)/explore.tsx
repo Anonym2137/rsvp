@@ -1,60 +1,112 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, FlatList, Pressable, Image, StyleSheet,
   ActivityIndicator, Alert, ScrollView
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, BookOpen, Download, ChevronDown } from 'lucide-react-native';
-import * as WebBrowser from 'expo-web-browser';
+import { Search, BookOpen, Download, ChevronDown, Wifi, WifiOff } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useLibrary } from '../../hooks/useLibrary';
-import { searchBooks } from '../../services/bookSearch';
+import { parseAnnaSearchResults, buildSearchUrl, buildBookUrl, ANNA_MIRRORS } from '../../services/annaSearch';
+import { parseEpubFile, parsePlainText } from '../../services/epubParser';
+import AnnaWebViewBridge from '../../components/AnnaWebViewBridge';
+import DownloadWebViewModal from '../../components/DownloadWebViewModal';
+import * as db from '../../db/database';
+import * as FileSystem from 'expo-file-system/legacy';
 import type { SearchResult } from '../../types';
 
 export default function ExploreScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { books, selectBook } = useLibrary();
+  const { books, selectBook, refreshBooks } = useLibrary();
 
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Search parameters states
+  // Filter states
   const [selectedSort, setSelectedSort] = useState('');
   const [selectedLang, setSelectedLang] = useState('');
   const [selectedFormat, setSelectedFormat] = useState('epub');
-
-  // Simple state toggles for filter menus
   const [activeMenu, setActiveMenu] = useState<'sort' | 'lang' | 'format' | null>(null);
 
-  // Search debounce and query trigger
+  // WebView bridge state
+  const [bridgeUrl, setBridgeUrl] = useState<string | null>(null);
+  // Which Anna's Archive mirror we're currently trying (index into ANNA_MIRRORS)
+  const [mirrorIdx, setMirrorIdx] = useState(0);
+  const pendingQueryRef = useRef<string>('');
+
+  // Download modal state
+  const downloadBookRef = useRef<SearchResult | null>(null);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
+  // Importing state
+  const [isImporting, setIsImporting] = useState(false);
+
+  // ── Search flow ──────────────────────────────────────────────────
+
+  // Debounce: when query changes, trigger a WebView load
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
       setSearchResults([]);
       setIsLoading(false);
+      setBridgeUrl(null);
       return;
     }
 
+    setBridgeUrl(null);
     setIsLoading(true);
-    const timer = setTimeout(async () => {
-      try {
-        const results = await searchBooks(trimmed, selectedSort, selectedLang, selectedFormat);
-        setSearchResults(results);
-      } catch (e) {
-        console.error('Online search failed:', e);
-        setSearchResults([]);
-      } finally {
-        setIsLoading(false);
-      }
+    setSearchResults([]);
+    pendingQueryRef.current = trimmed;
+
+    const timer = setTimeout(() => {
+      const url = buildSearchUrl(trimmed, selectedFormat, selectedLang, selectedSort, ANNA_MIRRORS[mirrorIdx]);
+      setBridgeUrl(url);
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [query, selectedSort, selectedLang, selectedFormat]);
+  }, [query, selectedSort, selectedLang, selectedFormat, mirrorIdx]);
 
-  // Local books matching query
+  const handleBridgeHtml = useCallback((html: string) => {
+    const results = parseAnnaSearchResults(html);
+    setSearchResults(results);
+    setIsLoading(false);
+    // Keep bridge mounted so cookies/clearance are preserved for next search
+  }, []);
+
+  const handleBridgeError = useCallback((msg: string) => {
+    console.warn('AnnaWebViewBridge error:', msg);
+    // Try the next mirror if the current one failed to load.
+    const next = mirrorIdx + 1;
+    if (next < ANNA_MIRRORS.length) {
+      console.warn(`Anna mirror ${ANNA_MIRRORS[mirrorIdx]} failed; trying ${ANNA_MIRRORS[next]}`);
+      // Retrigger the same query against the next mirror.
+      if (pendingQueryRef.current) {
+        const url = buildSearchUrl(
+          pendingQueryRef.current,
+          selectedFormat,
+          selectedLang,
+          selectedSort,
+          ANNA_MIRRORS[next],
+        );
+        setBridgeUrl(url);
+      }
+      setMirrorIdx(next);
+    } else {
+      // All mirrors exhausted.
+      Alert.alert(
+        'Anna\'s Archive niedostępne',
+        'Wszystkie znane lustra są obecnie niedostępne. Spróbuj ponownie później lub sprawdź połączenie z internetem.',
+      );
+    }
+    setIsLoading(next < ANNA_MIRRORS.length);
+    setSearchResults([]);
+  }, [mirrorIdx, selectedFormat, selectedLang, selectedSort]);
+
+  // ── Local library match ─────────────────────────────────────────
+
   const filteredLocal = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -68,36 +120,68 @@ export default function ExploreScreen() {
     router.push(`/reader/${id}`);
   };
 
-  const handleOpenDownloadPage = async (book: SearchResult) => {
-    const bookPageUrl = `https://z-lib.gl${book.id}`;
+  // ── Download & import ───────────────────────────────────────────
 
-    Alert.alert(
-      'Pobieranie książki',
-      'Otworzymy stronę książki w przeglądarce telefonu. \n\n1. Pobierz plik na telefon.\n2. Wróć do aplikacji i dodaj go w zakładce "Biblioteka" za pomocą "Wybierz plik".',
-      [
-        { text: 'Anuluj', style: 'cancel' },
-        {
-          text: 'Otwórz pobieranie',
-          onPress: async () => {
-            try {
-              await WebBrowser.openBrowserAsync(bookPageUrl);
-            } catch (err) {
-              console.error('Failed to open browser:', err);
-              Alert.alert('Błąd', 'Nie można otworzyć przeglądarki.');
-            }
-          }
-        }
-      ]
-    );
-  };
+  const handlePressResult = useCallback((book: SearchResult) => {
+    downloadBookRef.current = book;
+    const bookUrl = buildBookUrl(book.id, ANNA_MIRRORS[mirrorIdx]);
+    setDownloadUrl(bookUrl);
+  }, [mirrorIdx]);
 
-  // Filter lists configuration
+  const handleFileDownloaded = useCallback(async (localUri: string, filename: string) => {
+    setIsImporting(true);
+    try {
+      const isEpub = filename.toLowerCase().endsWith('.epub');
+      let parsed;
+
+      if (isEpub) {
+        parsed = await parseEpubFile(localUri);
+      } else {
+        const text = await FileSystem.readAsStringAsync(localUri, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+        parsed = parsePlainText(filename.replace(/\.[^.]+$/, ''), text);
+      }
+
+      const bookId = await db.insertBook(parsed.title, parsed.author, parsed.cover ?? downloadBookRef.current?.cover ?? null);
+      try {
+        await db.insertChapters(bookId, parsed.chapters);
+      } catch (error) {
+        await db.deleteBook(bookId);
+        throw error;
+      }
+      await refreshBooks();
+
+      Alert.alert(
+        '✓ Dodano do biblioteki',
+        `„${parsed.title}" zostało dodane do Twojej biblioteki.`,
+        [
+          { text: 'OK' },
+          {
+            text: 'Czytaj teraz',
+            onPress: async () => {
+              await selectBook(bookId);
+              router.push(`/reader/${bookId}`);
+            },
+          },
+        ]
+      );
+    } catch (err: any) {
+      console.error('Import after download failed:', err);
+      throw err;
+    } finally {
+      setIsImporting(false);
+    }
+  }, [refreshBooks, selectBook, router]);
+
+  // ── Filter config ───────────────────────────────────────────────
+
   const sortOptions = [
     { label: 'Trafność', value: '' },
     { label: 'Najnowsze', value: 'newest' },
     { label: 'Najstarsze', value: 'oldest' },
     { label: 'Największe', value: 'largest' },
-    { label: 'Najmniejsze', value: 'smallest' }
+    { label: 'Najmniejsze', value: 'smallest' },
   ];
 
   const langOptions = [
@@ -106,13 +190,12 @@ export default function ExploreScreen() {
     { label: 'Angielski (EN)', value: 'en' },
     { label: 'Niemiecki (DE)', value: 'de' },
     { label: 'Hiszpański (ES)', value: 'es' },
-    { label: 'Francuski (FR)', value: 'fr' }
+    { label: 'Francuski (FR)', value: 'fr' },
   ];
 
   const formatOptions = [
-    { label: 'Format: EPUB', value: 'epub' },
-    { label: 'Format: TXT', value: 'txt' },
-    { label: 'Format: PDF', value: 'pdf' }
+    { label: 'EPUB', value: 'epub' },
+    { label: 'TXT', value: 'txt' },
   ];
 
   const toggleMenu = (menu: 'sort' | 'lang' | 'format') => {
@@ -121,11 +204,40 @@ export default function ExploreScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      {/* Invisible WebView bridge — resolves JS challenge */}
+      {bridgeUrl && (
+        <AnnaWebViewBridge
+          key={bridgeUrl}
+          url={bridgeUrl}
+          onHtml={handleBridgeHtml}
+          onError={handleBridgeError}
+          waitMs={3500}
+        />
+      )}
+
+      {/* Download modal */}
+      {downloadUrl && (
+        <DownloadWebViewModal
+          visible={!!downloadUrl}
+          url={downloadUrl}
+          onClose={() => setDownloadUrl(null)}
+          onFileDownloaded={handleFileDownloaded}
+        />
+      )}
+
+      {/* Importing overlay */}
+      {isImporting && (
+        <View style={[styles.importingOverlay, { backgroundColor: colors.background + 'EE' }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.importingText, { color: colors.foreground }]}>Importowanie książki…</Text>
+        </View>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.foreground }]}>Eksploruj</Text>
         <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-          Wyszukaj darmowe teksty i książki w sieci.
+          Wyszukaj i pobierz książki z Anna's Archive.
         </Text>
       </View>
 
@@ -140,12 +252,12 @@ export default function ExploreScreen() {
             value={query}
             onChangeText={setQuery}
           />
+          {isLoading && <ActivityIndicator size="small" color={colors.primary} />}
         </View>
       </View>
 
       {/* Filter chips bar */}
       <View style={styles.filterBar}>
-        {/* Sort select */}
         <Pressable
           onPress={() => toggleMenu('sort')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -156,7 +268,6 @@ export default function ExploreScreen() {
           <ChevronDown size={14} color={colors.mutedFg} />
         </Pressable>
 
-        {/* Language select */}
         <Pressable
           onPress={() => toggleMenu('lang')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -167,7 +278,6 @@ export default function ExploreScreen() {
           <ChevronDown size={14} color={colors.mutedFg} />
         </Pressable>
 
-        {/* Format select */}
         <Pressable
           onPress={() => toggleMenu('format')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -179,7 +289,7 @@ export default function ExploreScreen() {
         </Pressable>
       </View>
 
-      {/* Dropdown Options overlay list */}
+      {/* Dropdown overlay */}
       {activeMenu && (
         <View style={[styles.dropdownOptions, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {activeMenu === 'sort' && sortOptions.map(opt => (
@@ -218,7 +328,7 @@ export default function ExploreScreen() {
         </View>
       )}
 
-      {/* Book Search Results */}
+      {/* Results list */}
       <FlatList
         data={searchResults}
         keyExtractor={(item) => item.id}
@@ -241,24 +351,22 @@ export default function ExploreScreen() {
                     )}
                   </View>
                   <View style={styles.itemInfo}>
-                    <Text style={[styles.itemTitle, { color: colors.foreground }]} numberOfLines={1}>
-                      {b.title}
-                    </Text>
-                    <Text style={[styles.itemAuthor, { color: colors.mutedFg }]} numberOfLines={1}>
-                      {b.author}
-                    </Text>
+                    <Text style={[styles.itemTitle, { color: colors.foreground }]} numberOfLines={1}>{b.title}</Text>
+                    <Text style={[styles.itemAuthor, { color: colors.mutedFg }]} numberOfLines={1}>{b.author}</Text>
                   </View>
                 </Pressable>
               ))}
-              <Text style={[styles.sectionHeading, { color: colors.mutedFg, marginTop: 16 }]}>WYNIKI ONLINE</Text>
+              {searchResults.length > 0 && (
+                <Text style={[styles.sectionHeading, { color: colors.mutedFg, marginTop: 16 }]}>WYNIKI ONLINE</Text>
+              )}
             </View>
-          ) : query.trim() ? (
+          ) : query.trim() && searchResults.length > 0 ? (
             <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>WYNIKI ONLINE</Text>
           ) : null
         }
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => handleOpenDownloadPage(item)}
+            onPress={() => handlePressResult(item)}
             style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={[styles.coverBox, { backgroundColor: colors.surface3, borderColor: colors.border }]}>
@@ -275,6 +383,11 @@ export default function ExploreScreen() {
               <Text style={[styles.itemAuthor, { color: colors.mutedFg }]} numberOfLines={1}>
                 {item.author}
               </Text>
+              {item.details && (
+                <Text style={[styles.itemDetails, { color: colors.subtleFg }]} numberOfLines={1}>
+                  {item.details}
+                </Text>
+              )}
             </View>
             <View style={[styles.downloadIcon, { backgroundColor: colors.primary }]}>
               <Download size={14} color={colors.primaryFg} />
@@ -285,18 +398,19 @@ export default function ExploreScreen() {
           isLoading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.loadingText, { color: colors.mutedFg }]}>Wyszukiwanie…</Text>
+              <Text style={[styles.loadingText, { color: colors.mutedFg }]}>Wyszukiwanie (ładowanie strony)…</Text>
+              <Text style={[styles.loadingSubText, { color: colors.subtleFg }]}>Pierwsza prośba może potrwać kilka sekund.</Text>
             </View>
           ) : !query.trim() ? (
             <View style={styles.emptyWrap}>
               <Search size={48} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 12 }} />
               <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-                Wpisz tytuł lub autora, aby wyszukać w darmowych książkach.
+                Wpisz tytuł lub autora, aby wyszukać w Anna's Archive.
               </Text>
             </View>
           ) : (
             <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Brak wyników dla „{query}”</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Brak wyników dla „{query}"</Text>
             </View>
           )
         }
@@ -306,26 +420,23 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
+  safeArea: { flex: 1 },
+  importingOverlay: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
   },
+  importingText: { fontSize: 16, fontWeight: '600' },
   header: {
     paddingHorizontal: 20,
     paddingTop: 12,
     paddingBottom: 12,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  subtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  searchWrap: {
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
+  title: { fontSize: 24, fontWeight: '800' },
+  subtitle: { fontSize: 12, marginTop: 2 },
+  searchWrap: { paddingHorizontal: 20, marginBottom: 12 },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -334,13 +445,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 48,
   },
-  searchIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-  },
+  searchIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 14 },
   filterBar: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -356,10 +462,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 6,
   },
-  filterChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
+  filterChipText: { fontSize: 11, fontWeight: '600' },
   dropdownOptions: {
     position: 'absolute',
     top: 200,
@@ -371,17 +474,9 @@ const styles = StyleSheet.create({
     zIndex: 999,
     elevation: 5,
   },
-  dropdownOptionItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  localSection: {
-    marginBottom: 8,
-  },
+  dropdownOptionItem: { paddingVertical: 10, paddingHorizontal: 12 },
+  listContainer: { paddingHorizontal: 20, paddingBottom: 30 },
+  localSection: { marginBottom: 8 },
   sectionHeading: {
     fontSize: 10,
     fontWeight: '800',
@@ -406,22 +501,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  coverImg: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  itemAuthor: {
-    fontSize: 12,
-    marginTop: 2,
-  },
+  coverImg: { width: '100%', height: '100%', resizeMode: 'cover' },
+  itemInfo: { flex: 1 },
+  itemTitle: { fontSize: 14, fontWeight: '700' },
+  itemAuthor: { fontSize: 12, marginTop: 2 },
+  itemDetails: { fontSize: 10, marginTop: 3 },
   downloadIcon: {
     width: 32,
     height: 32,
@@ -429,21 +513,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadingWrap: {
-    paddingVertical: 40,
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 13,
-  },
-  emptyWrap: {
-    paddingVertical: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
+  loadingWrap: { paddingVertical: 40, alignItems: 'center', gap: 8 },
+  loadingText: { fontSize: 13 },
+  loadingSubText: { fontSize: 11 },
+  emptyWrap: { paddingVertical: 60, alignItems: 'center', justifyContent: 'center' },
+  emptyText: { fontSize: 13, textAlign: 'center' },
 });
