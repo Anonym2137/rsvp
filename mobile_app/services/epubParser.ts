@@ -14,7 +14,7 @@ interface ParsedBook {
 }
 
 /**
- * Parse an EPUB file from a local URI (e.g. from document picker).
+ * Parse an EPUB file from a local URI in the app’s private storage.
  */
 export async function parseEpubFile(fileUri: string): Promise<ParsedBook> {
   const base64 = await FileSystem.readAsStringAsync(fileUri, {
@@ -62,22 +62,44 @@ export async function parseEpubFile(fileUri: string): Promise<ParsedBook> {
     spineIds.push(match[1]);
   }
 
-  // 5. Try to extract cover image
+  // Cover metadata is independent of XML attribute order. Only select image
+  // manifest entries; an item named "cover" can also be an XHTML page.
   let coverBase64: string | null = null;
-  const coverMeta = extractAttribute(opfContent, 'meta[name="cover"]', 'content')
-    || findCoverItemId(opfContent);
-
-  if (coverMeta) {
-    const coverHref = manifestItems.get(coverMeta);
-    if (coverHref) {
-      const coverPath = opfDir + coverHref;
-      const coverFile = zip.file(coverPath);
-      if (coverFile) {
-        const coverData = await coverFile.async('base64');
-        const ext = coverHref.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
-        coverBase64 = `data:image/${ext};base64,${coverData}`;
-      }
+  const items = [...opfContent.matchAll(/<item\b([^>]*?)\/?>/gi)].map(match => ({
+    id: xmlAttribute(match[1], 'id'), href: xmlAttribute(match[1], 'href'),
+    mime: xmlAttribute(match[1], 'media-type'), properties: xmlAttribute(match[1], 'properties') ?? '',
+  }));
+  const coverId = [...opfContent.matchAll(/<meta\b([^>]*?)\/?>/gi)]
+    .find(match => xmlAttribute(match[1], 'name')?.toLowerCase() === 'cover');
+  const metadataId = coverId ? xmlAttribute(coverId[1], 'content') : null;
+  const candidates = [
+    ...items.filter(item => item.id === metadataId),
+    ...items.filter(item => item.properties.split(/\s+/).includes('cover-image')),
+    ...items.filter(item => /cover/i.test(item.id ?? '') || /(?:^|\/)cover[.]/i.test(item.href ?? '')),
+  ];
+  const guideCover = [...opfContent.matchAll(/<reference\b([^>]*?)\/?>/gi)]
+    .find(match => xmlAttribute(match[1], 'type') === 'cover');
+  if (guideCover) candidates.push({ id: null, href: xmlAttribute(guideCover[1], 'href'), mime: null, properties: '' });
+  for (const candidate of candidates) {
+    if (!candidate.href) continue;
+    let coverPath = resolveEpubPath(opfPath, candidate.href);
+    let mime = candidate.mime;
+    let coverFile = zip.file(coverPath);
+    if (!coverFile) continue;
+    if (!mime?.startsWith('image/') && !/\.(?:png|jpe?g|gif|webp|svg)$/i.test(coverPath)) {
+      const page = await coverFile.async('text');
+      const imageTag = page.match(/<(?:img|image)\b([^>]+)>/i);
+      const imageHref = imageTag && (xmlAttribute(imageTag[1], 'src') || xmlAttribute(imageTag[1], 'href') || xmlAttribute(imageTag[1], 'xlink:href'));
+      if (!imageHref) continue;
+      coverPath = resolveEpubPath(coverPath, imageHref);
+      coverFile = zip.file(coverPath);
+      mime = items.find(item => item.href && resolveEpubPath(opfPath, item.href) === coverPath)?.mime ?? null;
     }
+    if (!coverFile) continue;
+    mime = mime?.startsWith('image/') ? mime : imageMimeType(coverPath);
+    if (!mime) continue;
+    coverBase64 = `data:${mime};base64,${await coverFile.async('base64')}`;
+    break;
   }
 
   // 6. Parse chapters from spine
@@ -211,15 +233,19 @@ function extractAttribute(xml: string, elementPattern: string, attr: string): st
   return match ? match[1] : null;
 }
 
-function findCoverItemId(opfContent: string): string | null {
-  // Look for item with properties="cover-image" or id containing "cover"
-  const coverPropMatch = opfContent.match(/<item[^>]*properties=["'][^"']*cover-image[^"']*["'][^>]*id=["']([^"']+)["']/i);
-  if (coverPropMatch) return coverPropMatch[1];
+function xmlAttribute(attributes: string, name: string): string | null {
+  const match = attributes.match(new RegExp(`(?:^|\\s)${name}\\s*=\\s*["']([^"']*)["']`, 'i'));
+  return match ? match[1].replace(/&amp;/g, '&') : null;
+}
 
-  const coverIdMatch = opfContent.match(/<item[^>]*id=["']([^"']*cover[^"']*)["']/i);
-  if (coverIdMatch) return coverIdMatch[1];
+function resolveEpubPath(reference: string, href: string): string {
+  const pathname = new URL(href, `https://epub.local/${reference}`).pathname;
+  try { return decodeURIComponent(pathname).slice(1); } catch { return pathname.slice(1); }
+}
 
-  return null;
+function imageMimeType(path: string): string | null {
+  const extension = path.split('.').pop()?.toLowerCase();
+  return ({ jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' } as Record<string, string>)[extension ?? ''] ?? null;
 }
 
 function extractChapterTitle(html: string): string | null {

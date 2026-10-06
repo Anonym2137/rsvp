@@ -36,7 +36,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch naming, commit message forma
 *   **Quick Rewind**: A dedicated button to rewind exactly **15 seconds** of reading time (dynamically calculated based on WPM) if you lose focus.
 
 ### Book Search & Import
-*   **Online Search**: Search Anna's Archive directly from the app by **title, author, language, format, and sort options**. The **web app** performs a server-side query to Anna's Archive to populate results (the book *file* itself is never fetched or stored by this project — you download it yourself in your browser and import it locally). The **mobile app** queries Anna's Archive from the device and opens the download page in your browser.
+*   **Online Search**: Search Anna's Archive directly from the app by **title, author, language, format, and sort options**. The **mobile app** loads Anna's Archive in an in-app browser and imports user-selected EPUB/TXT downloads into its local library. The **web app** currently searches Z-Library through its backend.
 *   **On-Device File Parser**: Import local `.epub` and `.txt` files directly. The files are parsed entirely on-device (no servers required!).
 *   **Manual Text Entry**: Paste articles or custom text clips directly into the library.
 
@@ -130,11 +130,17 @@ bun test
 
 ---
 
-## ⚠️ Legal & Disclaimer
+## ⚠️ Educational Use & Legal Disclaimer
 
-This project includes optional integration with **Anna's Archive** for book *metadata search only*. It does **not** host, fetch, or redistribute any copyrighted files — the actual book files are obtained by the user directly from the source in their own browser.
+This project is provided for educational and research purposes, including learning about speed reading, on-device document parsing, and application development. It is not affiliated with or endorsed by Anna’s Archive, Z-Library, or other third-party services.
 
-Users are responsible for complying with applicable copyright law in their jurisdiction. The maintainers of this project do not endorse or facilitate copyright infringement.
+Only access, download, import, or use material you are legally entitled to use. Users are solely responsible for their use of this software and for complying with applicable laws, copyright restrictions, and third-party terms. The authors and maintainers do not authorize or endorse unlawful use and, to the extent permitted by applicable law, accept no responsibility or liability for users’ actions, legal claims, penalties, or other consequences arising from use of the software. The software is provided “as is”, without warranty, under the MIT License.
+
+The mobile app can download user-selected EPUB/TXT files from third-party services and import them locally. This repository and its release APKs do not include users’ downloaded books, phone SQLite databases, reading history, or personal libraries.
+
+### Local data and release contents
+
+The mobile library is stored in the app’s private SQLite database on the phone. Building an APK does not copy that database from an installed app. Published releases contain the application code and bundled application assets; local databases, signing keystores, credentials, and network capture files are excluded from Git. Online searches and downloads contact third-party websites, which receive those requests.
 
 ---
 

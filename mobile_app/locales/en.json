@@ -152,6 +152,10 @@
     }
   },
   "addBook": {
+    "onlineTab": "Online books",
+    "onlineDesc": "Find a book online and download it directly into your library. No phone storage access is needed.",
+    "searchBooks": "Search books",
+
     "title": "Add custom text",
     "bookTitle": "Title",
     "bookTitlePlaceholder": "e.g. Article about AI",
@@ -186,5 +190,18 @@
     "share": "Share to Stories",
     "changeRating": "Change rating",
     "delete": "Delete book"
+  },
+  "searchVerification": {
+    "wait": "Browser verification — wait or follow the instructions on the page.",
+    "nextMirror": "Try another mirror"
+  },
+  "bookDownload": {
+    "htmlResponse": "The server returned a web page instead of a book. Complete the browser check and try again.",
+    "supportedFormats": "The reader supports EPUB and TXT downloads. Choose one of these formats.",
+    "invalidUrl": "This download link is not supported.",
+    "failed": "Could not download or import the book: {{message}}",
+    "hint": "Download an EPUB or TXT to add it directly to your library",
+    "progress": "Downloading and importing…",
+    "importHint": "The book will appear in your library when the import finishes."
   }
 }

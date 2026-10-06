@@ -142,3 +142,49 @@ describe('epubParser', () => {
     });
   });
 });
+
+describe('EPUB cover extraction', () => {
+  async function parseCover(metadata: string, manifest: string, files: Record<string, string>) {
+    const zip = new JSZip();
+    zip.file('META-INF/container.xml', '<container><rootfiles><rootfile full-path="OPS/package.opf"/></rootfiles></container>');
+    zip.file('OPS/package.opf', `<package><metadata>${metadata}</metadata><manifest>${manifest}</manifest><spine/></package>`);
+    for (const [name, content] of Object.entries(files)) zip.file(name, content);
+    (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValueOnce(await zip.generateAsync({ type: 'base64' }));
+    return (await parseEpubFile('file:///cover-test.epub')).cover;
+  }
+
+  test('ignores unrelated metadata before the EPUB 2 cover declaration', async () => {
+    const cover = await parseCover('<meta name="generator" content="Calibre"/><meta content="picture" name="cover"/>',
+      '<item href="images/front.jpg" media-type="image/jpeg" id="picture"/>', { 'OPS/images/front.jpg': 'cover bytes' });
+    expect(cover).toBe(`data:image/jpeg;base64,${Buffer.from('cover bytes').toString('base64')}`);
+  });
+
+  test('recognizes EPUB 3 cover-image after id, including other properties', async () => {
+    const cover = await parseCover('', '<item id="picture" href="images/front.png" properties="nav cover-image" media-type="image/png"/>',
+      { 'OPS/images/front.png': 'png bytes' });
+    expect(cover).toBe(`data:image/png;base64,${Buffer.from('png bytes').toString('base64')}`);
+  });
+
+  test('resolves percent-encoded relative cover paths', async () => {
+    const cover = await parseCover('<meta name="cover" content="picture"/>', '<item id="picture" href="../images/front%20cover.webp" media-type="image/webp"/>',
+      { 'images/front cover.webp': 'webp bytes' });
+    expect(cover).toBe(`data:image/webp;base64,${Buffer.from('webp bytes').toString('base64')}`);
+  });
+
+  test('extracts the image referenced by an XHTML cover page', async () => {
+    const cover = await parseCover('', '<item id="cover" href="text/cover.xhtml" media-type="application/xhtml+xml"/><item id="picture" href="images/front.jpg" media-type="image/jpeg"/>',
+      { 'OPS/text/cover.xhtml': '<html><body><img src="../images/front.jpg"/></body></html>', 'OPS/images/front.jpg': 'cover bytes' });
+    expect(cover).toBe(`data:image/jpeg;base64,${Buffer.from('cover bytes').toString('base64')}`);
+  });
+
+  test('uses the guide cover page when its manifest id does not contain cover', async () => {
+    const cover = await parseCover('', '<item id="title" href="text/title.xhtml" media-type="application/xhtml+xml"/></manifest><guide><reference type="cover" href="text/title.xhtml"/></guide><manifest>',
+      { 'OPS/text/title.xhtml': '<svg><image xlink:href="../images/front.jpg"/></svg>', 'OPS/images/front.jpg': 'cover bytes' });
+    expect(cover).toBe(`data:image/jpeg;base64,${Buffer.from('cover bytes').toString('base64')}`);
+  });
+
+  test('does not treat unrelated metadata or illustrations as a cover', async () => {
+    expect(await parseCover('<meta name="generator" content="picture"/>', '<item id="picture" href="image.jpg" media-type="image/jpeg"/>',
+      { 'OPS/image.jpg': 'illustration' })).toBeNull();
+  });
+});
