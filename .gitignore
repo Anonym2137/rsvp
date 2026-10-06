@@ -37,3 +37,12 @@ Thumbs.db
 !.env.example
 
 .hermes
+
+# Private local data, SQLite sidecars, signing material, and network captures
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.db-*
+*.keystore
+*.jks
+*.har
