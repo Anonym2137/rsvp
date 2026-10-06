@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.1.0] - 2026-10-06
+
+### Added
+- In-app browser verification and mirror fallback for Anna’s Archive searches on mobile.
+- Direct EPUB/TXT downloads into the mobile library, with a Read now action after import.
+- An Expo config plugin that preserves the Android download handler when regenerating the native project.
+- Regression tests for the current search-result layout and EPUB cover extraction.
+
+### Fixed
+- Translate mobile search and import messages in English and Polish.
+- Display the configured app version in Settings and correct the local release build instructions.
+- Parse Anna’s Archive’s current result layout to show book titles, authors, and file details.
+- Handle download links that open new tabs, preserve EPUB filenames, and reuse browser-session cookies for downloads.
+- Restore EPUB/TXT import from phone storage through Android’s system file picker.
+- Correct EPUB 2 cover metadata matching, EPUB 3 attribute-order handling, relative cover paths, and XHTML cover-page image extraction.
+- Use the selected search thumbnail when an online import has no embedded cover.
+- Await import completion, remove temporary download files, and remove incomplete book records if chapter saving fails.
+
+### Changed
+- Set Android app version to 2.1.0 and version code to 3.
+- Update the existing README disclaimer to describe educational use, user responsibility, and the actual in-app download behavior.
+- Clarify that phone libraries and SQLite databases are not included in release APKs.
+- Exclude SQLite sidecars, signing keystores, and network capture files from Git.
+- Web book search now uses Z-Library.
+
+---
+
 ## [2.0.0] - 2026-08-03
 
 ### Added

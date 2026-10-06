@@ -68,13 +68,13 @@ npm test
 With **USB debugging** enabled on an Android phone:
 
 ```bash
-npm run android
-# equivalent to:
 npx expo run:android --variant release
 ```
 
 This compiles and installs the standalone app directly onto the device; no Metro
-server is needed afterwards.
+server is needed afterwards. `npm run android` starts the development server; it
+does not build a standalone release. Configure your own release signing key
+before distributing an APK; keep the keystore and passwords outside Git.
 
 ### Option B — Cloud build via EAS (shareable APK / AAB)
 

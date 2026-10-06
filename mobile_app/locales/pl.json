@@ -10,7 +10,8 @@
     "cancel": "Anuluj",
     "delete": "Usuń",
     "error": "Błąd",
-    "done": "Gotowe"
+    "done": "Gotowe",
+    "ok": "OK"
   },
   "settings": {
     "title": "Ustawienia",
@@ -62,7 +63,7 @@
   },
   "explore": {
     "title": "Eksploruj",
-    "subtitle": "Wyszukaj darmowe teksty i książki w sieci.",
+    "subtitle": "Wyszukaj i pobierz książki z Anna’s Archive.",
     "searchPlaceholder": "Tytuł, autor…",
     "yourLibrary": "Twoja Biblioteka",
     "onlineResults": "Wyniki online",
@@ -88,7 +89,7 @@
     "langZh": "Chiński",
     "langJa": "Japoński",
     "loading": "Wyszukiwanie…",
-    "noQuery": "Wpisz tytuł lub autora, aby wyszukać\nw milionach darmowych książek.",
+    "noQuery": "Wpisz tytuł lub autora, aby wyszukać w Anna’s Archive.",
     "noResults": "Brak wyników dla \"{{query}}\"",
     "downloadingBook": "Pobieranie książki…",
     "downloadBookTitle": "Pobieranie książki",
@@ -98,7 +99,14 @@
     "errorBrowser": "Nie można otworzyć przeglądarki.",
     "readBook": "Czytaj {{title}}",
     "downloadAndRead": "Pobierz i czytaj {{title}}",
-    "coverAlt": "Okładka: {{title}}"
+    "coverAlt": "Okładka: {{title}}",
+    "unavailableTitle": "Anna’s Archive niedostępne",
+    "unavailableBody": "Wszystkie znane lustra są niedostępne. Spróbuj później lub sprawdź połączenie z internetem.",
+    "importing": "Importowanie książki…",
+    "importSuccessTitle": "Dodano do biblioteki",
+    "importSuccessBody": "„{{title}}” dodano do Twojej biblioteki.",
+    "readNow": "Czytaj teraz",
+    "loadingHint": "Pierwsze wyszukiwanie może potrwać kilka sekund."
   },
   "stats": {
     "title": "Statystyki",
@@ -155,7 +163,6 @@
     "onlineTab": "Książki online",
     "onlineDesc": "Znajdź książkę online i pobierz ją bezpośrednio do biblioteki. Dostęp do plików telefonu nie jest potrzebny.",
     "searchBooks": "Szukaj książek",
-
     "title": "Dodaj własny tekst",
     "bookTitle": "Tytuł",
     "bookTitlePlaceholder": "Np. Artykuł o AI",

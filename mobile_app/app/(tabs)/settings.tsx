@@ -1,4 +1,6 @@
 import React from 'react';
+import Constants from 'expo-constants';
+import appConfig from '../../app.json';
 import { View, Text, ScrollView, Pressable, Switch, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
@@ -190,7 +192,7 @@ export default function SettingsScreen() {
                 </View>
                 <Text style={[styles.itemTitle, { color: colors.foreground }]}>{t('settings.version')}</Text>
               </View>
-              <Text style={[styles.infoValue, { color: colors.mutedFg }]}>1.0.0 (Standalone)</Text>
+              <Text style={[styles.infoValue, { color: colors.mutedFg }]}>{Constants.expoConfig?.version ?? appConfig.expo.version}</Text>
             </View>
 
             <View style={[styles.divider, { backgroundColor: colors.border }]} />

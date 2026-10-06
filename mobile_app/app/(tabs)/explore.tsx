@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, FlatList, Pressable, Image, StyleSheet,
-  ActivityIndicator, Alert, ScrollView
+  ActivityIndicator, Alert
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, BookOpen, Download, ChevronDown, Wifi, WifiOff } from 'lucide-react-native';
+import { Search, BookOpen, Download, ChevronDown } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useLibrary } from '../../hooks/useLibrary';
 import { parseAnnaSearchResults, buildSearchUrl, buildBookUrl, ANNA_MIRRORS } from '../../services/annaSearch';
@@ -18,6 +19,7 @@ import type { SearchResult } from '../../types';
 
 export default function ExploreScreen() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const { books, selectBook, refreshBooks } = useLibrary();
 
@@ -97,13 +99,13 @@ export default function ExploreScreen() {
     } else {
       // All mirrors exhausted.
       Alert.alert(
-        'Anna\'s Archive niedostępne',
-        'Wszystkie znane lustra są obecnie niedostępne. Spróbuj ponownie później lub sprawdź połączenie z internetem.',
+        t('explore.unavailableTitle'),
+        t('explore.unavailableBody'),
       );
     }
     setIsLoading(next < ANNA_MIRRORS.length);
     setSearchResults([]);
-  }, [mirrorIdx, selectedFormat, selectedLang, selectedSort]);
+  }, [mirrorIdx, selectedFormat, selectedLang, selectedSort, t]);
 
   // ── Local library match ─────────────────────────────────────────
 
@@ -153,12 +155,12 @@ export default function ExploreScreen() {
       await refreshBooks();
 
       Alert.alert(
-        '✓ Dodano do biblioteki',
-        `„${parsed.title}" zostało dodane do Twojej biblioteki.`,
+        t('explore.importSuccessTitle'),
+        t('explore.importSuccessBody', { title: parsed.title }),
         [
-          { text: 'OK' },
+          { text: t('common.ok') },
           {
-            text: 'Czytaj teraz',
+            text: t('explore.readNow'),
             onPress: async () => {
               await selectBook(bookId);
               router.push(`/reader/${bookId}`);
@@ -172,25 +174,25 @@ export default function ExploreScreen() {
     } finally {
       setIsImporting(false);
     }
-  }, [refreshBooks, selectBook, router]);
+  }, [refreshBooks, selectBook, router, t]);
 
   // ── Filter config ───────────────────────────────────────────────
 
   const sortOptions = [
-    { label: 'Trafność', value: '' },
-    { label: 'Najnowsze', value: 'newest' },
-    { label: 'Najstarsze', value: 'oldest' },
-    { label: 'Największe', value: 'largest' },
-    { label: 'Najmniejsze', value: 'smallest' },
+    { label: t('explore.sortRelevance'), value: '' },
+    { label: t('explore.sortNewest'), value: 'newest' },
+    { label: t('explore.sortOldest'), value: 'oldest' },
+    { label: t('explore.sortLargest'), value: 'largest' },
+    { label: t('explore.sortSmallest'), value: 'smallest' },
   ];
 
   const langOptions = [
-    { label: 'Język: Wszystkie', value: '' },
-    { label: 'Polski (PL)', value: 'pl' },
-    { label: 'Angielski (EN)', value: 'en' },
-    { label: 'Niemiecki (DE)', value: 'de' },
-    { label: 'Hiszpański (ES)', value: 'es' },
-    { label: 'Francuski (FR)', value: 'fr' },
+    { label: t('explore.langAll'), value: '' },
+    { label: t('explore.langPl'), value: 'pl' },
+    { label: t('explore.langEn'), value: 'en' },
+    { label: t('explore.langDe'), value: 'de' },
+    { label: t('explore.langEs'), value: 'es' },
+    { label: t('explore.langFr'), value: 'fr' },
   ];
 
   const formatOptions = [
@@ -229,15 +231,15 @@ export default function ExploreScreen() {
       {isImporting && (
         <View style={[styles.importingOverlay, { backgroundColor: colors.background + 'EE' }]}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.importingText, { color: colors.foreground }]}>Importowanie książki…</Text>
+          <Text style={[styles.importingText, { color: colors.foreground }]}>{t('explore.importing')}</Text>
         </View>
       )}
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Eksploruj</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t('explore.title')}</Text>
         <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-          Wyszukaj i pobierz książki z Anna's Archive.
+          {t('explore.subtitle')}
         </Text>
       </View>
 
@@ -247,7 +249,7 @@ export default function ExploreScreen() {
           <Search size={18} color={colors.mutedFg} style={styles.searchIcon} />
           <TextInput
             style={[styles.input, { color: colors.foreground }]}
-            placeholder="Tytuł, autor…"
+            placeholder={t('explore.searchPlaceholder')}
             placeholderTextColor={colors.mutedFg}
             value={query}
             onChangeText={setQuery}
@@ -263,7 +265,7 @@ export default function ExploreScreen() {
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
           <Text style={[styles.filterChipText, { color: colors.foreground }]}>
-            {sortOptions.find(o => o.value === selectedSort)?.label || 'Trafność'}
+            {sortOptions.find(o => o.value === selectedSort)?.label || t('explore.sortRelevance')}
           </Text>
           <ChevronDown size={14} color={colors.mutedFg} />
         </Pressable>
@@ -273,7 +275,7 @@ export default function ExploreScreen() {
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
           <Text style={[styles.filterChipText, { color: colors.foreground }]}>
-            {langOptions.find(o => o.value === selectedLang)?.label.replace('Język: ', '') || 'Język'}
+            {langOptions.find(o => o.value === selectedLang)?.label || t('explore.langAll')}
           </Text>
           <ChevronDown size={14} color={colors.mutedFg} />
         </Pressable>
@@ -336,7 +338,7 @@ export default function ExploreScreen() {
         ListHeaderComponent={
           query.trim() && filteredLocal.length > 0 ? (
             <View style={styles.localSection}>
-              <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>TWOJA BIBLIOTEKA</Text>
+              <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>{t('explore.yourLibrary').toUpperCase()}</Text>
               {filteredLocal.map((b) => (
                 <Pressable
                   key={b.id}
@@ -357,11 +359,11 @@ export default function ExploreScreen() {
                 </Pressable>
               ))}
               {searchResults.length > 0 && (
-                <Text style={[styles.sectionHeading, { color: colors.mutedFg, marginTop: 16 }]}>WYNIKI ONLINE</Text>
+                <Text style={[styles.sectionHeading, { color: colors.mutedFg, marginTop: 16 }]}>{t('explore.onlineResults').toUpperCase()}</Text>
               )}
             </View>
           ) : query.trim() && searchResults.length > 0 ? (
-            <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>WYNIKI ONLINE</Text>
+            <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>{t('explore.onlineResults').toUpperCase()}</Text>
           ) : null
         }
         renderItem={({ item }) => (
@@ -398,19 +400,19 @@ export default function ExploreScreen() {
           isLoading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={[styles.loadingText, { color: colors.mutedFg }]}>Wyszukiwanie (ładowanie strony)…</Text>
-              <Text style={[styles.loadingSubText, { color: colors.subtleFg }]}>Pierwsza prośba może potrwać kilka sekund.</Text>
+              <Text style={[styles.loadingText, { color: colors.mutedFg }]}>{t('explore.loading')}</Text>
+              <Text style={[styles.loadingSubText, { color: colors.subtleFg }]}>{t('explore.loadingHint')}</Text>
             </View>
           ) : !query.trim() ? (
             <View style={styles.emptyWrap}>
               <Search size={48} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 12 }} />
               <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-                Wpisz tytuł lub autora, aby wyszukać w Anna's Archive.
+                {t('explore.noQuery')}
               </Text>
             </View>
           ) : (
             <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Brak wyników dla „{query}"</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>{t('explore.noResults', { query })}</Text>
             </View>
           )
         }
