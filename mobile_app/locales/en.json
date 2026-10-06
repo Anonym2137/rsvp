@@ -10,7 +10,8 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "error": "Error",
-    "done": "Done"
+    "done": "Done",
+    "ok": "OK"
   },
   "settings": {
     "title": "Settings",
@@ -62,7 +63,7 @@
   },
   "explore": {
     "title": "Explore",
-    "subtitle": "Find free texts and books online.",
+    "subtitle": "Search and download books from Anna’s Archive.",
     "searchPlaceholder": "Title, author…",
     "yourLibrary": "Your Library",
     "onlineResults": "Online Results",
@@ -88,7 +89,7 @@
     "langZh": "Chinese",
     "langJa": "Japanese",
     "loading": "Searching…",
-    "noQuery": "Type a title or author to search\namong millions of free books.",
+    "noQuery": "Type a title or author to search Anna’s Archive.",
     "noResults": "No results for \"{{query}}\"",
     "downloadingBook": "Downloading book…",
     "downloadBookTitle": "Download book",
@@ -98,7 +99,14 @@
     "errorBrowser": "Could not open the browser.",
     "readBook": "Read {{title}}",
     "downloadAndRead": "Download & read {{title}}",
-    "coverAlt": "Cover: {{title}}"
+    "coverAlt": "Cover: {{title}}",
+    "unavailableTitle": "Anna’s Archive unavailable",
+    "unavailableBody": "All known mirrors are unavailable. Try again later or check your internet connection.",
+    "importing": "Importing book…",
+    "importSuccessTitle": "Added to library",
+    "importSuccessBody": "“{{title}}” has been added to your library.",
+    "readNow": "Read now",
+    "loadingHint": "The first search may take a few seconds."
   },
   "stats": {
     "title": "Stats",
@@ -155,7 +163,6 @@
     "onlineTab": "Online books",
     "onlineDesc": "Find a book online and download it directly into your library. No phone storage access is needed.",
     "searchBooks": "Search books",
-
     "title": "Add custom text",
     "bookTitle": "Title",
     "bookTitlePlaceholder": "e.g. Article about AI",
