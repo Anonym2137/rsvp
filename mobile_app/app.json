@@ -2,7 +2,7 @@
   "expo": {
     "name": "rsvp reader",
     "slug": "mobile_app",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobileapp",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.anonym.rsvpreader",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -40,3 +40,7 @@ The final export is in `/tmp/rsvp-redesign-verified`; build/export logs and prev
 - Shared headers, Home labels/badges, reading controls, and tab labels constrain or wrap text on narrow screens.
 - Verified Polish dark Stats on Android; populated and empty charts at 360px in Chromium; English light chart; 150% browser text stress check with no horizontal text overflow. This is not a complete native accessibility matrix.
 - TypeScript and Jest pass: 4 suites / 29 tests, including weekly aggregation and read-only session-query coverage. Android/iOS/web exports pass; no additional native dependency or rebuild is required for this follow-up.
+
+## Version 3.0.0 Android release
+
+Signed universal `assembleRelease` build passes with the supplied existing release keystore. APK metadata is 3.0.0 / code 4; APK signature verification passes and the certificate matches the installed release. A signed upgrade was not installed during this release task. Download and checksum details are recorded in `docs/releases/v3.0.0.md` and published as GitHub release assets.
