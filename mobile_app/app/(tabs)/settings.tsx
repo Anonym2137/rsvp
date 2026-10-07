@@ -1,7 +1,9 @@
+import { Design } from '../../constants/theme';
+import { ScreenHeader, Action, Surface } from '../../components/DesignSystem';
 import React from 'react';
 import Constants from 'expo-constants';
 import appConfig from '../../app.json';
-import { View, Text, ScrollView, Pressable, Switch, StyleSheet } from 'react-native';
+import { View, Text, ScrollView,  Switch, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { Moon, Sun, Gauge, Eye, Info, Zap, Languages } from 'lucide-react-native';
@@ -33,20 +35,17 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t('settings.title')}</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedFg }]}>{t('settings.subtitle')}</Text>
-        </View>
+        <View style={{ paddingHorizontal: 0 }}><ScreenHeader title={t('settings.title')} subtitle={t('settings.subtitle')} /></View>
 
         {/* Appearance (Theme) */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.mutedFg }]}>{t('settings.appearance').toUpperCase()}</Text>
           <View style={styles.themeRow}>
             {/* Dark option */}
-            <Pressable
+            <Action
               onPress={() => setTheme('dark')}
               style={[
                 styles.themeCard,
@@ -67,10 +66,10 @@ export default function SettingsScreen() {
                 <Text style={[styles.themeLabel, { color: colors.foreground }]}>{t('settings.dark')}</Text>
               </View>
               {theme === 'dark' && <View style={[styles.dot, { backgroundColor: colors.primary }]} />}
-            </Pressable>
+            </Action>
 
             {/* Light option */}
-            <Pressable
+            <Action
               onPress={() => setTheme('light')}
               style={[
                 styles.themeCard,
@@ -91,40 +90,40 @@ export default function SettingsScreen() {
                 <Text style={[styles.themeLabel, { color: colors.foreground }]}>{t('settings.light')}</Text>
               </View>
               {theme === 'light' && <View style={[styles.dot, { backgroundColor: colors.primary }]} />}
-            </Pressable>
+            </Action>
           </View>
         </View>
 
         {/* Language */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.mutedFg }]}>{t('settings.language').toUpperCase()}</Text>
-          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Surface style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.cardItemRow}>
               <View style={styles.itemTitleRow}>
                 <View style={[styles.iconBox, { backgroundColor: colors.primaryMuted }]}>
                   <Languages size={16} color={colors.primary} />
                 </View>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={[styles.itemTitle, { color: colors.foreground }]}>{t('settings.language')}</Text>
                   <Text style={[styles.itemSub, { color: colors.mutedFg }]}>{t('settings.languageDesc')}</Text>
                 </View>
               </View>
-              <Pressable
+              <Action
                 onPress={toggleLanguage}
                 style={[styles.langPill, { backgroundColor: colors.surface3, borderColor: colors.border }]}
               >
                 <Text style={[styles.langPillText, { color: colors.foreground }]}>
                   {i18n.language === 'pl' ? 'Polski' : 'English'}
                 </Text>
-              </Pressable>
+              </Action>
             </View>
-          </View>
+          </Surface>
         </View>
 
         {/* RSVP Reading */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.mutedFg }]}>{t('settings.rsvpReading').toUpperCase()}</Text>
-          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Surface style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {/* Speed slider */}
             <View style={styles.cardItem}>
               <View style={styles.itemHeader}>
@@ -132,7 +131,7 @@ export default function SettingsScreen() {
                   <View style={[styles.iconBox, { backgroundColor: colors.primaryMuted }]}>
                     <Gauge size={16} color={colors.primary} />
                   </View>
-                  <View>
+                  <View style={{ flex: 1 }}>
                     <Text style={[styles.itemTitle, { color: colors.foreground }]}>{t('settings.readingSpeed')}</Text>
                     <Text style={[styles.itemSub, { color: colors.mutedFg }]}>{t('settings.readingSpeedDesc')}</Text>
                   </View>
@@ -166,7 +165,7 @@ export default function SettingsScreen() {
                 <View style={[styles.iconBox, { backgroundColor: colors.primaryMuted }]}>
                   <Eye size={16} color={colors.primary} />
                 </View>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={[styles.itemTitle, { color: colors.foreground }]}>{t('settings.fixationPoint')}</Text>
                   <Text style={[styles.itemSub, { color: colors.mutedFg }]}>{t('settings.fixationPointDesc')}</Text>
                 </View>
@@ -178,13 +177,13 @@ export default function SettingsScreen() {
                 thumbColor={colors.surface}
               />
             </View>
-          </View>
+          </Surface>
         </View>
 
         {/* O aplikacji */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.mutedFg }]}>{t('settings.about').toUpperCase()}</Text>
-          <View style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Surface style={[styles.cardGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.cardItemRow}>
               <View style={styles.itemTitleRow}>
                 <View style={[styles.iconBox, { backgroundColor: colors.surface3 }]}>
@@ -206,7 +205,7 @@ export default function SettingsScreen() {
               </View>
               <Text style={[styles.infoValue, { color: colors.mutedFg }]}>RSVP (React Native)</Text>
             </View>
-          </View>
+          </Surface>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -218,7 +217,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 20,
+    padding: Design.spacing.lg,
     paddingBottom: 40,
     gap: 20,
   },
@@ -226,18 +225,18 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '800',
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
   },
   section: {
     gap: 10,
   },
   sectionTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1,
     paddingLeft: 4,
@@ -248,7 +247,7 @@ const styles = StyleSheet.create({
   },
   themeCard: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 28,
     borderWidth: 2,
     padding: 16,
     alignItems: 'center',
@@ -280,23 +279,23 @@ const styles = StyleSheet.create({
   previewLine3Light: { height: 4, borderRadius: 2, backgroundColor: '#ebebef', width: '60%' },
   previewPill: { position: 'absolute', bottom: 6, left: 8, width: 32, height: 10, borderRadius: 5 },
   themeLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  themeLabel: { fontSize: 13, fontWeight: '600' },
+  themeLabel: { fontSize: 15, fontWeight: '600' },
   dot: { width: 6, height: 6, borderRadius: 3 },
-  cardGroup: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
+  cardGroup: { borderRadius: 28, borderWidth: 1, overflow: 'hidden' },
   cardItem: { padding: 16 },
-  cardItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-  itemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  itemTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cardItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 16 },
+  itemHeader: { flexWrap: 'wrap', gap: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  itemTitleRow: { flex: 1, flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBox: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  itemTitle: { fontSize: 13, fontWeight: '600' },
-  itemSub: { fontSize: 11, marginTop: 1 },
-  speedVal: { fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  speedUnit: { fontSize: 10, fontWeight: '400' },
+  itemTitle: { fontSize: 15, fontWeight: '600' },
+  itemSub: { fontSize: 13, marginTop: 1 },
+  speedVal: { fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  speedUnit: { fontSize: 12, fontWeight: '400' },
   slider: { width: '100%', height: 32 },
   sliderLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  sliderMinMax: { fontSize: 10 },
+  sliderMinMax: { fontSize: 12 },
   divider: { height: 1, width: '100%' },
   langPill: { borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 8 },
-  langPillText: { fontSize: 13, fontWeight: '600' },
-  infoValue: { fontSize: 13 },
+  langPillText: { fontSize: 15, fontWeight: '600' },
+  infoValue: { fontSize: 15 },
 });

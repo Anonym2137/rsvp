@@ -45,3 +45,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Commit dependency versions for reproducible UI/native builds.
+!package-lock.json

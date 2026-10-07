@@ -72,4 +72,15 @@ describe('database (web branch)', () => {
     const book = await db.getBookById(id);
     expect(book?.isFinished).toBe(false);
   });
+  it('reads only recent sessions without modifying saved activity', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    store['rsvp_web_sessions'] = JSON.stringify([
+      { createdAt: now, durationSeconds: 90 },
+      { createdAt: now - 10 * 86400, durationSeconds: 300 },
+    ]);
+    const saved = store['rsvp_web_sessions'];
+    expect(await db.getRecentReadingSessions()).toEqual([{ createdAt: now, durationSeconds: 90 }]);
+    expect(store['rsvp_web_sessions']).toBe(saved);
+  });
+
 });

@@ -493,3 +493,20 @@ export async function getRatedBooks(): Promise<RatedBook[]> {
     rating: row.rating ?? 0,
   }));
 }
+
+// Additive, read-only query; existing session storage and schemas stay unchanged.
+export async function getRecentReadingSessions(): Promise<{ createdAt: number; durationSeconds: number }[]> {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - 6);
+  if (IS_WEB) {
+    const sessions = await getWebStorage<ReadingSession[]>(WEB_SESSIONS_KEY, []);
+    return sessions.filter(session => session.createdAt >= start.getTime() / 1000);
+  }
+  const database = await getDatabase();
+  if (!database) return [];
+  return database.getAllAsync<{ createdAt: number; durationSeconds: number }>(
+    'SELECT created_at AS createdAt, duration_seconds AS durationSeconds FROM reading_sessions WHERE created_at >= ?',
+    [Math.floor(start.getTime() / 1000)]
+  );
+}

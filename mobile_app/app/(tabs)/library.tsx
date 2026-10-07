@@ -1,6 +1,9 @@
+import { Design } from '../../constants/theme';
+import StateAnimation from '../../components/StateAnimation';
+import { ScreenHeader, Action, Field } from '../../components/DesignSystem';
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  View, Text, TextInput, FlatList, Pressable, StyleSheet, RefreshControl, Alert
+  View, Text, FlatList,  StyleSheet, RefreshControl, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -72,29 +75,20 @@ export default function LibraryScreen() {
   }, [refreshBooks]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t('library.title')}</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-            {books.length} {books.length === 1 ? t('library.book_one') : t('library.book_other')}
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={() => setAddModalVisible(true)}
-          style={[styles.addBtn, { backgroundColor: colors.primary }]}
-        >
-          <Plus size={22} color={colors.primaryFg} />
-        </Pressable>
+        <ScreenHeader title={t('library.title')}
+          subtitle={`${books.length} ${books.length === 1 ? t('library.book_one') : t('library.book_other')}`}
+          action={<Action accessibilityLabel={t('addBook.title')} onPress={() => setAddModalVisible(true)}
+            style={[styles.addBtn, { backgroundColor: colors.primary }]}><Plus size={22} color={colors.primaryFg} /></Action>} />
       </View>
 
       {/* Search Input */}
       <View style={styles.searchWrap}>
         <View style={[styles.inputBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Search size={18} color={colors.mutedFg} style={styles.searchIcon} />
-          <TextInput
+          <Field
             style={[styles.input, { color: colors.foreground }]}
             placeholder={t('library.searchPlaceholder')}
             placeholderTextColor={colors.mutedFg}
@@ -120,9 +114,7 @@ export default function LibraryScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyWrap}>
-              <View style={[styles.emptyIconBox, { backgroundColor: colors.surface2, borderColor: colors.border }]}>
-                <BookOpen size={32} color={colors.mutedFg} />
-              </View>
+              <StateAnimation kind="book" />
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
                 {query ? t('library.noResults') : t('library.empty')}
               </Text>
@@ -132,13 +124,13 @@ export default function LibraryScreen() {
                   : t('library.emptyDesc')}
               </Text>
               {!query && (
-                <Pressable
+                <Action
                   onPress={() => setAddModalVisible(true)}
                   style={[styles.addTextBtn, { backgroundColor: colors.primary }]}
                 >
                   <Plus size={16} color={colors.primaryFg} />
                   <Text style={[styles.addTextBtnLabel, { color: colors.primaryFg }]}>{t('library.discoverBooks')}</Text>
-                </Pressable>
+                </Action>
               )}
             </View>
           ) : null
@@ -175,16 +167,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     paddingTop: 12,
     paddingBottom: 16,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '800',
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
   },
   addBtn: {
@@ -195,7 +187,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   searchWrap: {
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     marginBottom: 16,
   },
   inputBox: {
@@ -204,17 +196,17 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     paddingHorizontal: 14,
-    height: 48,
+    minHeight: 52,
   },
   searchIcon: {
     marginRight: 10,
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
   },
   listContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     paddingBottom: 30,
   },
   emptyWrap: {
@@ -225,7 +217,7 @@ const styles = StyleSheet.create({
   emptyIconBox: {
     width: 64,
     height: 64,
-    borderRadius: 20,
+    borderRadius: 28,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -237,7 +229,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   emptyDesc: {
-    fontSize: 13,
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -245,12 +237,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     paddingVertical: 12,
     borderRadius: 16,
   },
   addTextBtnLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

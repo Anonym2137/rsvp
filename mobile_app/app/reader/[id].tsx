@@ -1,12 +1,15 @@
+import StateAnimation from '../../components/StateAnimation';
+import { Action } from '../../components/DesignSystem';
 import React, { useMemo } from 'react';
 import {
-  View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator,
+  View, Text, ScrollView, StyleSheet, Switch,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
 import { ArrowLeft, Play, Pause, RotateCcw, Rewind } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { type ThemeColors } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useLibrary } from '../../hooks/useLibrary';
 import { useRsvp } from '../../hooks/useRsvp';
@@ -17,6 +20,7 @@ import CompletionCelebration from '../../components/CompletionCelebration';
 export default function ReaderScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ id: string }>();
 
@@ -60,15 +64,15 @@ export default function ReaderScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: '#090d16' }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
+        <Action
+          accessibilityLabel={t('accessibility.back')} onPress={() => router.back()}
           style={styles.backBtn}
         >
-          <ArrowLeft size={20} color="#94a3b8" />
-        </Pressable>
+          <ArrowLeft size={20} color={colors.mutedFg} />
+        </Action>
         <View style={styles.headerInfo}>
           <Text style={styles.bookTitle} numberOfLines={1}>
             {currentBook?.title ?? t('reader.noBook')}
@@ -82,7 +86,7 @@ export default function ReaderScreen() {
 
       {isLoadingChapters ? (
         <View style={styles.loadingCenter}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <StateAnimation kind="loading" size={80} />
           <Text style={styles.loadingText}>{t('reader.loadingChapters')}</Text>
         </View>
       ) : (
@@ -94,18 +98,18 @@ export default function ReaderScreen() {
                 {chapters.map((ch, idx) => {
                   const isActive = idx === currentChapterIndex;
                   return (
-                    <Pressable
+                    <Action
                       key={ch.id}
                       onPress={() => jumpToChapter(chapterWordOffsets[idx])}
                       style={[
                         styles.chip,
-                        { backgroundColor: isActive ? '#4f46e5' : '#1e293b' },
+                        { backgroundColor: isActive ? colors.primary : colors.surface2 },
                       ]}
                     >
-                      <Text style={[styles.chipText, { color: isActive ? '#ffffff' : '#94a3b8' }]}>
+                      <Text style={[styles.chipText, { color: isActive ? colors.primaryFg : colors.mutedFg }]}>
                         {ch.label}
                       </Text>
-                    </Pressable>
+                    </Action>
                   );
                 })}
               </ScrollView>
@@ -113,14 +117,14 @@ export default function ReaderScreen() {
           )}
 
           {/* RSVP Reader Main Area */}
-          <View style={styles.mainArea}>
+          <ScrollView contentContainerStyle={styles.mainArea}>
             {/* Progress bar info */}
             <View style={styles.progressInfoWrap}>
               <View style={styles.progressInfoRow}>
                 <Text style={styles.wordCounter}>
                   {t('reader.word', { current: Math.min(rsvp.wordIndex + 1, rsvp.words.length), total: rsvp.words.length })}
                 </Text>
-                <Text style={styles.wpmCounter}>{rsvp.speed} WPM</Text>
+                <Text style={styles.wpmCounter}>{rsvp.speed} {t('stats.unit.wpm')}</Text>
               </View>
               <View style={styles.progressTrack}>
                 <View style={[styles.progressFill, { width: `${rsvp.progress}%` }]} />
@@ -129,9 +133,9 @@ export default function ReaderScreen() {
 
             {/* RSVP Word Display Box */}
             <View style={styles.wordDisplayWindow}>
-              <View style={styles.orpGuideLine} />
-              <View style={[styles.orpDot, styles.orpDotTop]} />
-              <View style={[styles.orpDot, styles.orpDotBottom]} />
+              {rsvp.showFixation && <View style={styles.orpGuideLine} />}
+              {rsvp.showFixation && <View style={[styles.orpDot, styles.orpDotTop]} />}
+              {rsvp.showFixation && <View style={[styles.orpDot, styles.orpDotBottom]} />}
 
               <RsvpWord word={rsvp.formattedWord} fontSize={32} />
             </View>
@@ -140,7 +144,7 @@ export default function ReaderScreen() {
             <View style={styles.sliderWrap}>
               <View style={styles.sliderHeader}>
                 <Text style={styles.sliderLabel}>{t('reader.speed')}</Text>
-                <Text style={styles.sliderValue}>{rsvp.speed} WPM</Text>
+                <Text style={styles.sliderValue}>{rsvp.speed} {t('stats.unit.wpm')}</Text>
               </View>
               <Slider
                 value={rsvp.speed}
@@ -148,59 +152,53 @@ export default function ReaderScreen() {
                 maximumValue={1000}
                 step={25}
                 onValueChange={rsvp.setSpeed}
-                minimumTrackTintColor="#6366f1"
-                maximumTrackTintColor="#334155"
-                thumbTintColor="#6366f1"
+                minimumTrackTintColor={colors.primary}
+                maximumTrackTintColor={colors.surface3}
+                thumbTintColor={colors.primary}
                 style={styles.slider}
               />
             </View>
 
             {/* Play/Pause/Reset Controls */}
             <View style={styles.controlsRow}>
-              <Pressable
+              <Action
                 onPress={rsvp.rewind}
                 style={styles.rewindBtn}
               >
-                <Rewind size={18} color="#cbd5e1" fill="#cbd5e1" />
+                <Rewind size={18} color={colors.foreground} fill={colors.foreground} />
                 <Text style={styles.rewindBtnText}>{t('reader.rewind')}</Text>
-              </Pressable>
+              </Action>
 
-              <Pressable
+              <Action
                 onPress={rsvp.toggle}
                 style={styles.playBtn}
               >
                 {rsvp.isPlaying ? (
-                  <Pause size={20} color="#ffffff" fill="#ffffff" />
+                  <Pause size={20} color={colors.primaryFg} fill={colors.primaryFg} />
                 ) : (
-                  <Play size={20} color="#ffffff" fill="#ffffff" />
+                  <Play size={20} color={colors.primaryFg} fill={colors.primaryFg} />
                 )}
                 <Text style={styles.playBtnText}>{rsvp.isPlaying ? t('reader.pause') : t('reader.play')}</Text>
-              </Pressable>
+              </Action>
 
-              <Pressable
-                onPress={rsvp.reset}
+              <Action
+                accessibilityLabel={t('rsvpPlayer.reset')} onPress={rsvp.reset}
                 style={styles.resetBtn}
               >
-                <RotateCcw size={20} color="#cbd5e1" />
-              </Pressable>
+                <RotateCcw size={20} color={colors.foreground} />
+              </Action>
             </View>
 
             {/* Fixation point toggle */}
             <View style={styles.fixationRow}>
               <Text style={styles.fixationLabel}>{t('reader.fixation')}</Text>
-              <Pressable
-                onPress={() => rsvp.setShowFixation(!rsvp.showFixation)}
-                style={[styles.toggleBg, { backgroundColor: rsvp.showFixation ? '#4f46e5' : '#334155' }]}
-              >
-                <View
-                  style={[
-                    styles.toggleKnob,
-                    { transform: [{ translateX: rsvp.showFixation ? 20 : 2 }] },
-                  ]}
-                />
-              </Pressable>
+              <Switch value={rsvp.showFixation}
+                accessibilityLabel={t('reader.fixation')}
+                onValueChange={rsvp.setShowFixation}
+                trackColor={{ false: colors.surface3, true: colors.primary }}
+                thumbColor={colors.primaryFg} />
             </View>
-          </View>
+          </ScrollView>
         </View>
       )}
 
@@ -219,7 +217,7 @@ export default function ReaderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
   },
@@ -229,29 +227,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: colors.surface2,
     gap: 12,
   },
   backBtn: {
     padding: 8,
     borderRadius: 12,
-    backgroundColor: '#1e293b',
+    backgroundColor: colors.surface2,
   },
   headerInfo: {
     flex: 1,
   },
   bookTitle: {
-    color: '#ffffff',
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: 16,
     fontWeight: '700',
   },
   bookAuthor: {
-    color: '#94a3b8',
-    fontSize: 11,
+    color: colors.mutedFg,
+    fontSize: 13,
   },
   progressPct: {
-    color: '#818cf8',
-    fontSize: 13,
+    color: colors.primary,
+    fontSize: 15,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -262,8 +260,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: '#94a3b8',
-    fontSize: 14,
+    color: colors.mutedFg,
+    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -271,7 +269,7 @@ const styles = StyleSheet.create({
   chaptersBar: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(30, 41, 59, 0.4)',
+    borderBottomColor: colors.borderSubtle,
   },
   chaptersList: {
     paddingHorizontal: 16,
@@ -280,14 +278,15 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 28,
   },
   chipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   mainArea: {
-    flex: 1,
+    flexGrow: 1,
+    paddingVertical: 24,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
@@ -303,32 +302,32 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   wordCounter: {
-    color: '#64748b',
-    fontSize: 11,
+    color: colors.mutedFg,
+    fontSize: 13,
   },
   wpmCounter: {
-    color: '#64748b',
-    fontSize: 11,
+    color: colors.mutedFg,
+    fontSize: 13,
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#1e293b',
+    backgroundColor: colors.surface2,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#6366f1',
+    backgroundColor: colors.primary,
     borderRadius: 2,
   },
   wordDisplayWindow: {
     width: '100%',
     maxWidth: 340,
     height: 120,
-    backgroundColor: '#0f172a',
-    borderRadius: 24,
+    backgroundColor: colors.surface,
+    borderRadius: 32,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: colors.surface2,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: '50%',
     width: 1,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    backgroundColor: colors.primaryMuted,
   },
   orpDot: {
     position: 'absolute',
@@ -349,7 +348,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(99, 102, 241, 0.3)',
+    backgroundColor: colors.primaryMuted,
   },
   orpDotTop: {
     top: 8,
@@ -367,12 +366,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sliderLabel: {
-    color: '#94a3b8',
-    fontSize: 12,
+    color: colors.mutedFg,
+    fontSize: 14,
   },
   sliderValue: {
-    color: '#818cf8',
-    fontSize: 12,
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: '700',
   },
   slider: {
@@ -389,38 +388,38 @@ const styles = StyleSheet.create({
   rewindBtn: {
     width: 74,
     height: 54,
-    backgroundColor: '#1e293b',
-    borderRadius: 20,
+    backgroundColor: colors.surface2,
+    borderRadius: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
   },
   rewindBtnText: {
-    color: '#cbd5e1',
-    fontSize: 12,
+    color: colors.foreground,
+    fontSize: 14,
     fontWeight: '700',
   },
   playBtn: {
     flex: 1,
     height: 54,
-    backgroundColor: '#4f46e5',
-    borderRadius: 20,
+    backgroundColor: colors.primary,
+    borderRadius: 28,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   playBtnText: {
-    color: '#ffffff',
+    color: colors.primaryFg,
     fontSize: 15,
     fontWeight: '700',
   },
   resetBtn: {
     width: 54,
     height: 54,
-    backgroundColor: '#1e293b',
-    borderRadius: 20,
+    backgroundColor: colors.surface2,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -430,8 +429,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   fixationLabel: {
-    color: '#94a3b8',
-    fontSize: 12,
+    color: colors.mutedFg,
+    fontSize: 14,
   },
   toggleBg: {
     width: 44,
@@ -443,6 +442,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.primaryFg,
   },
 });

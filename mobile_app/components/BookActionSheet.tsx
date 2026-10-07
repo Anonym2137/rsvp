@@ -1,3 +1,4 @@
+import { Action, Sheet } from './DesignSystem';
 /**
  * BookActionSheet — bottom sheet shown when a book in the library is tapped.
  * Offers: Read, Share to Stories (ShareStorySheet), Change rating, Delete.
@@ -5,7 +6,7 @@
  * reached via long-press (configured by the parent).
  */
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { BookOpen, Share2, Star, Trash2, X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../hooks/useTheme';
@@ -58,10 +59,8 @@ export default function BookActionSheet({
   if (!visible || !book) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 300 }]} pointerEvents="box-none">
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <>
+      <Sheet visible={visible && !shareOpen} onClose={onClose}>
           <View style={styles.header}>
             <View style={styles.headerText}>
               <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1}>
@@ -71,9 +70,9 @@ export default function BookActionSheet({
                 {book.author}
               </Text>
             </View>
-            <Pressable onPress={onClose} style={styles.closeIcon}>
+            <Action accessibilityLabel={t('common.cancel')} onPress={onClose} style={styles.closeIcon}>
               <X size={18} color={colors.mutedFg} />
-            </Pressable>
+            </Action>
           </View>
 
           {editingRating ? (
@@ -82,47 +81,46 @@ export default function BookActionSheet({
                 {t('book.changeRating')}
               </Text>
               <StarRating value={rating} onChange={handleRate} size={34} />
-              <Pressable onPress={() => setEditingRating(false)} style={[styles.doneBtn, { borderColor: colors.border }]}>
+              <Action onPress={() => setEditingRating(false)} style={[styles.doneBtn, { borderColor: colors.border }]}>
                 <Text style={[styles.doneText, { color: colors.foreground }]}>{t('common.done')}</Text>
-              </Pressable>
+              </Action>
             </View>
           ) : (
             <View style={styles.actions}>
-              <Pressable
+              <Action
                 onPress={() => { onClose(); onRead(book.id); }}
                 style={[styles.action, { backgroundColor: colors.primary }]}
               >
                 <BookOpen size={18} color={colors.primaryFg} />
                 <Text style={[styles.actionText, { color: colors.primaryFg }]}>{t('book.read')}</Text>
-              </Pressable>
+              </Action>
 
-              <Pressable
+              <Action
                 onPress={() => setShareOpen(true)}
                 style={[styles.action, { backgroundColor: colors.surface3, borderColor: colors.border }]}
               >
                 <Share2 size={18} color={colors.foreground} />
                 <Text style={[styles.actionText, { color: colors.foreground }]}>{t('book.share')}</Text>
-              </Pressable>
+              </Action>
 
-              <Pressable
+              <Action
                 onPress={() => setEditingRating(true)}
                 style={[styles.action, { backgroundColor: colors.surface3, borderColor: colors.border }]}
               >
                 <Star size={18} color={colors.foreground} fill={rating > 0 ? '#fbbf24' : 'transparent'} />
                 <Text style={[styles.actionText, { color: colors.foreground }]}>{t('book.changeRating')}</Text>
-              </Pressable>
+              </Action>
 
-              <Pressable
+              <Action
                 onPress={handleDelete}
-                style={[styles.action, { backgroundColor: 'rgba(251,113,133,0.12)', borderColor: 'rgba(251,113,133,0.4)' }]}
+                style={[styles.action, { backgroundColor: colors.accentRedMuted, borderColor: colors.accentRed }]}
               >
-                <Trash2 size={18} color="#fb7185" />
-                <Text style={[styles.actionText, { color: '#fb7185' }]}>{t('book.delete')}</Text>
-              </Pressable>
+                <Trash2 size={18} color={colors.accentRed} />
+                <Text style={[styles.actionText, { color: colors.accentRed }]}>{t('book.delete')}</Text>
+              </Action>
             </View>
           )}
-        </View>
-      </View>
+      </Sheet>
 
       <ShareStorySheet
         visible={shareOpen}
@@ -132,7 +130,7 @@ export default function BookActionSheet({
         initialRating={rating}
         onClose={() => setShareOpen(false)}
       />
-    </View>
+    </>
   );
 }
 
@@ -171,7 +169,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   author: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
   },
   closeIcon: {
@@ -192,7 +190,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   actionText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   ratingEdit: {
@@ -201,7 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   ratingLabel: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
   },
   doneBtn: {
@@ -214,7 +212,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   doneText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

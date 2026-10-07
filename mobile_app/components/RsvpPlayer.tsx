@@ -1,8 +1,9 @@
+import { Action } from './DesignSystem';
 /**
  * RsvpPlayer — full RSVP reading widget with speed slider, word display, and controls.
  */
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Play, Pause, RotateCcw } from 'lucide-react-native';
 import RsvpWord from './RsvpWord';
@@ -35,7 +36,7 @@ export default function RsvpPlayer({
       {/* Speed header */}
       <View style={styles.speedHeader}>
         <Text style={[styles.label, { color: colors.mutedFg }]}>{t('rsvpPlayer.preview')}</Text>
-        <Text style={[styles.speedValue, { color: colors.primary }]}>{speed} WPM</Text>
+        <Text style={[styles.speedValue, { color: colors.primary }]}>{speed} {t('stats.unit.wpm')}</Text>
       </View>
 
       {/* Slider */}
@@ -65,7 +66,7 @@ export default function RsvpPlayer({
 
       {/* Controls */}
       <View style={styles.controls}>
-        <Pressable
+        <Action
           onPress={onToggle}
           style={[styles.playBtn, { backgroundColor: colors.primary }]}
         >
@@ -77,14 +78,14 @@ export default function RsvpPlayer({
           <Text style={[styles.playBtnText, { color: colors.primaryFg }]}>
             {isPlaying ? t('rsvpPlayer.pause') : t('rsvpPlayer.play')}
           </Text>
-        </Pressable>
+        </Action>
 
-        <Pressable
-          onPress={onReset}
+        <Action
+          accessibilityLabel={t('rsvpPlayer.reset')} onPress={onReset}
           style={[styles.resetBtn, { backgroundColor: colors.surface3, borderColor: colors.border }]}
         >
           <RotateCcw size={18} color={colors.foreground} />
-        </Pressable>
+        </Action>
       </View>
     </View>
   );
@@ -92,22 +93,25 @@ export default function RsvpPlayer({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 28,
     padding: 16,
     borderWidth: 1,
   },
   speedHeader: {
+    flexWrap: 'wrap',
+    gap: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
   label: {
-    fontSize: 12,
+    flexShrink: 1,
+    fontSize: 14,
     fontWeight: '500',
   },
   speedValue: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -162,7 +166,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   playBtnText: {
-    fontSize: 13,
+    flexShrink: 1,
+    textAlign: 'center',
+    fontSize: 15,
     fontWeight: '700',
   },
   resetBtn: {

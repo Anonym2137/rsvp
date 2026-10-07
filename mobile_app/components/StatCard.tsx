@@ -1,3 +1,4 @@
+import { Surface } from './DesignSystem';
 /**
  * StatCard — a metric tile for the Stats page.
  */
@@ -43,7 +44,7 @@ export default function StatCard({ label, value, unit, icon, accent = 'indigo' }
   const valueColor = accent === 'indigo' ? colors.foreground : accentColor;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Surface style={[styles.container, { backgroundColor: accentBg, borderColor: accentColor + '44' }]}>
       <View style={styles.header}>
         <Text style={[styles.label, { color: colors.mutedFg }]}>{label}</Text>
         <View style={[styles.iconWrap, { backgroundColor: accentBg }]}>
@@ -56,13 +57,13 @@ export default function StatCard({ label, value, unit, icon, accent = 'indigo' }
           <Text style={[styles.unit, { color: colors.mutedFg }]}> {unit}</Text>
         ) : null}
       </Text>
-    </View>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 28,
     padding: 16,
     borderWidth: 1,
     gap: 12,
@@ -73,7 +74,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    fontSize: 10,
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -91,7 +95,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   unit: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '400',
   },
 });

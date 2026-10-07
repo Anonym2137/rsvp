@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.0.0] - Unreleased
+
+### Added
+- Gluestack UI v5 with NativeWind and shared theme tokens for the mobile interface.
+- Original Lottie animations for loading, empty states, and book completion, with reduced-motion fallbacks.
+- A seven-day reading activity chart based on saved sessions, plus a reading-time summary and clearer speed, streak, and book counts.
+- English and Polish translations for the new interface copy.
+
+### Changed
+- Redesign all five mobile tabs, the full-screen reader, import dialogs, book actions, and sharing sheets with violet, mint, and amber accents, rounded surfaces, and consistent typography in both themes.
+- Refresh statistics when returning to the Stats tab.
+- Preserve existing books, reading progress, ratings, preferences, import/search integrations, and share-card capture without a data migration.
+
+---
+
 ## [2.1.0] - 2026-10-06
 
 ### Added

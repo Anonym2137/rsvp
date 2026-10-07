@@ -114,7 +114,7 @@
     "totalTime": "Łączny czas",
     "maxSpeed": "Maks. Prędkość",
     "books": "Książki",
-    "streak": "Streak",
+    "streak": "Seria dni",
     "ratings": "Oceny",
     "noRatings": "Nie oceniłeś jeszcze żadnej książki. Oceń książkę po jej ukończeniu, aby pojawiła się tutaj.",
     "noData": "Brak danych",
@@ -124,7 +124,12 @@
       "wpm": "WPM",
       "pcs": "szt.",
       "days": "dni"
-    }
+    },
+    "activity": "Ten tydzień",
+    "activitySummary": "{{minutes}} min czytania w ostatnich 7 dniach",
+    "activityDay": "{{day}}: {{minutes}} min",
+    "words": "Przeczytane słowa",
+    "weekEmpty": "Twoja kolejna sesja czytania pojawi się tutaj."
   },
   "reader": {
     "loading": "Ładowanie rozdziałów…",
@@ -210,5 +215,12 @@
     "hint": "Pobierz EPUB lub TXT, aby dodać książkę bezpośrednio do biblioteki",
     "progress": "Pobieranie i importowanie…",
     "importHint": "Książka pojawi się w bibliotece po zakończeniu importu."
+  },
+  "accessibility": {
+    "back": "Wstecz",
+    "rating": "Oceń na {{value}} z {{max}} gwiazdek"
+  },
+  "shareCard": {
+    "completed": "PRZECZYTANE"
   }
 }

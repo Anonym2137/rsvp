@@ -1,6 +1,9 @@
+import { Design } from '../../constants/theme';
+import StateAnimation from '../../components/StateAnimation';
+import { ScreenHeader, Action, Field } from '../../components/DesignSystem';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
-  View, Text, TextInput, FlatList, Pressable, Image, StyleSheet,
+  View, Text, FlatList,  Image, StyleSheet,
   ActivityIndicator, Alert
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -205,7 +208,7 @@ export default function ExploreScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Invisible WebView bridge — resolves JS challenge */}
       {bridgeUrl && (
         <AnnaWebViewBridge
@@ -230,24 +233,19 @@ export default function ExploreScreen() {
       {/* Importing overlay */}
       {isImporting && (
         <View style={[styles.importingOverlay, { backgroundColor: colors.background + 'EE' }]}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <StateAnimation kind="loading" size={80} />
           <Text style={[styles.importingText, { color: colors.foreground }]}>{t('explore.importing')}</Text>
         </View>
       )}
 
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{t('explore.title')}</Text>
-        <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-          {t('explore.subtitle')}
-        </Text>
-      </View>
+      <View style={{ paddingHorizontal: 20 }}><ScreenHeader title={t('explore.title')} subtitle={t('explore.subtitle')} /></View>
 
       {/* Search Input */}
       <View style={styles.searchWrap}>
         <View style={[styles.inputBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Search size={18} color={colors.mutedFg} style={styles.searchIcon} />
-          <TextInput
+          <Field
             style={[styles.input, { color: colors.foreground }]}
             placeholder={t('explore.searchPlaceholder')}
             placeholderTextColor={colors.mutedFg}
@@ -260,7 +258,7 @@ export default function ExploreScreen() {
 
       {/* Filter chips bar */}
       <View style={styles.filterBar}>
-        <Pressable
+        <Action
           onPress={() => toggleMenu('sort')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
@@ -268,9 +266,9 @@ export default function ExploreScreen() {
             {sortOptions.find(o => o.value === selectedSort)?.label || t('explore.sortRelevance')}
           </Text>
           <ChevronDown size={14} color={colors.mutedFg} />
-        </Pressable>
+        </Action>
 
-        <Pressable
+        <Action
           onPress={() => toggleMenu('lang')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
@@ -278,9 +276,9 @@ export default function ExploreScreen() {
             {langOptions.find(o => o.value === selectedLang)?.label || t('explore.langAll')}
           </Text>
           <ChevronDown size={14} color={colors.mutedFg} />
-        </Pressable>
+        </Action>
 
-        <Pressable
+        <Action
           onPress={() => toggleMenu('format')}
           style={[styles.filterChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
         >
@@ -288,14 +286,14 @@ export default function ExploreScreen() {
             {selectedFormat.toUpperCase()}
           </Text>
           <ChevronDown size={14} color={colors.mutedFg} />
-        </Pressable>
+        </Action>
       </View>
 
       {/* Dropdown overlay */}
       {activeMenu && (
         <View style={[styles.dropdownOptions, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {activeMenu === 'sort' && sortOptions.map(opt => (
-            <Pressable
+            <Action
               key={opt.value}
               onPress={() => { setSelectedSort(opt.value); setActiveMenu(null); }}
               style={styles.dropdownOptionItem}
@@ -303,10 +301,10 @@ export default function ExploreScreen() {
               <Text style={{ color: selectedSort === opt.value ? colors.primary : colors.foreground, fontWeight: selectedSort === opt.value ? '700' : '400' }}>
                 {opt.label}
               </Text>
-            </Pressable>
+            </Action>
           ))}
           {activeMenu === 'lang' && langOptions.map(opt => (
-            <Pressable
+            <Action
               key={opt.value}
               onPress={() => { setSelectedLang(opt.value); setActiveMenu(null); }}
               style={styles.dropdownOptionItem}
@@ -314,10 +312,10 @@ export default function ExploreScreen() {
               <Text style={{ color: selectedLang === opt.value ? colors.primary : colors.foreground, fontWeight: selectedLang === opt.value ? '700' : '400' }}>
                 {opt.label}
               </Text>
-            </Pressable>
+            </Action>
           ))}
           {activeMenu === 'format' && formatOptions.map(opt => (
-            <Pressable
+            <Action
               key={opt.value}
               onPress={() => { setSelectedFormat(opt.value); setActiveMenu(null); }}
               style={styles.dropdownOptionItem}
@@ -325,7 +323,7 @@ export default function ExploreScreen() {
               <Text style={{ color: selectedFormat === opt.value ? colors.primary : colors.foreground, fontWeight: selectedFormat === opt.value ? '700' : '400' }}>
                 {opt.label}
               </Text>
-            </Pressable>
+            </Action>
           ))}
         </View>
       )}
@@ -340,7 +338,7 @@ export default function ExploreScreen() {
             <View style={styles.localSection}>
               <Text style={[styles.sectionHeading, { color: colors.mutedFg }]}>{t('explore.yourLibrary').toUpperCase()}</Text>
               {filteredLocal.map((b) => (
-                <Pressable
+                <Action
                   key={b.id}
                   onPress={() => handleSelectLocal(b.id)}
                   style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -356,7 +354,7 @@ export default function ExploreScreen() {
                     <Text style={[styles.itemTitle, { color: colors.foreground }]} numberOfLines={1}>{b.title}</Text>
                     <Text style={[styles.itemAuthor, { color: colors.mutedFg }]} numberOfLines={1}>{b.author}</Text>
                   </View>
-                </Pressable>
+                </Action>
               ))}
               {searchResults.length > 0 && (
                 <Text style={[styles.sectionHeading, { color: colors.mutedFg, marginTop: 16 }]}>{t('explore.onlineResults').toUpperCase()}</Text>
@@ -367,7 +365,7 @@ export default function ExploreScreen() {
           ) : null
         }
         renderItem={({ item }) => (
-          <Pressable
+          <Action
             onPress={() => handlePressResult(item)}
             style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
@@ -394,17 +392,18 @@ export default function ExploreScreen() {
             <View style={[styles.downloadIcon, { backgroundColor: colors.primary }]}>
               <Download size={14} color={colors.primaryFg} />
             </View>
-          </Pressable>
+          </Action>
         )}
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <StateAnimation kind="loading" size={80} />
               <Text style={[styles.loadingText, { color: colors.mutedFg }]}>{t('explore.loading')}</Text>
               <Text style={[styles.loadingSubText, { color: colors.subtleFg }]}>{t('explore.loadingHint')}</Text>
             </View>
           ) : !query.trim() ? (
             <View style={styles.emptyWrap}>
+              <StateAnimation kind="book" />
               <Search size={48} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 12 }} />
               <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
                 {t('explore.noQuery')}
@@ -412,6 +411,7 @@ export default function ExploreScreen() {
             </View>
           ) : (
             <View style={styles.emptyWrap}>
+              <StateAnimation kind="book" />
               <Text style={[styles.emptyText, { color: colors.mutedFg }]}>{t('explore.noResults', { query })}</Text>
             </View>
           )
@@ -432,26 +432,27 @@ const styles = StyleSheet.create({
   },
   importingText: { fontSize: 16, fontWeight: '600' },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     paddingTop: 12,
     paddingBottom: 12,
   },
-  title: { fontSize: 24, fontWeight: '800' },
-  subtitle: { fontSize: 12, marginTop: 2 },
-  searchWrap: { paddingHorizontal: 20, marginBottom: 12 },
+  title: { fontSize: 30, fontWeight: '800' },
+  subtitle: { fontSize: 14, marginTop: 2 },
+  searchWrap: { paddingHorizontal: Design.spacing.lg, marginBottom: 12 },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: 1,
     paddingHorizontal: 14,
-    height: 48,
+    minHeight: 52,
   },
   searchIcon: { marginRight: 10 },
-  input: { flex: 1, fontSize: 14 },
+  input: { flex: 1, fontSize: 16 },
   filterBar: {
+    flexWrap: 'wrap',
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     marginBottom: 16,
     gap: 8,
   },
@@ -464,12 +465,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 6,
   },
-  filterChipText: { fontSize: 11, fontWeight: '600' },
+  filterChipText: { fontSize: 13, fontWeight: '600' },
   dropdownOptions: {
-    position: 'absolute',
-    top: 200,
-    left: 20,
-    right: 20,
+    marginHorizontal: Design.spacing.lg,
+    marginBottom: Design.spacing.md,
     borderRadius: 16,
     borderWidth: 1,
     padding: 8,
@@ -477,10 +476,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   dropdownOptionItem: { paddingVertical: 10, paddingHorizontal: 12 },
-  listContainer: { paddingHorizontal: 20, paddingBottom: 30 },
+  listContainer: { paddingHorizontal: Design.spacing.lg, paddingBottom: 30 },
   localSection: { marginBottom: 8 },
   sectionHeading: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1,
     marginBottom: 10,
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 18,
+    borderRadius: 24,
     borderWidth: 1,
     marginBottom: 10,
     gap: 14,
@@ -505,9 +504,9 @@ const styles = StyleSheet.create({
   },
   coverImg: { width: '100%', height: '100%', resizeMode: 'cover' },
   itemInfo: { flex: 1 },
-  itemTitle: { fontSize: 14, fontWeight: '700' },
-  itemAuthor: { fontSize: 12, marginTop: 2 },
-  itemDetails: { fontSize: 10, marginTop: 3 },
+  itemTitle: { fontSize: 16, fontWeight: '700' },
+  itemAuthor: { fontSize: 14, marginTop: 2 },
+  itemDetails: { fontSize: 12, marginTop: 3 },
   downloadIcon: {
     width: 32,
     height: 32,
@@ -516,8 +515,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingWrap: { paddingVertical: 40, alignItems: 'center', gap: 8 },
-  loadingText: { fontSize: 13 },
-  loadingSubText: { fontSize: 11 },
+  loadingText: { fontSize: 15 },
+  loadingSubText: { fontSize: 13 },
   emptyWrap: { paddingVertical: 60, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontSize: 13, textAlign: 'center' },
+  emptyText: { fontSize: 15, textAlign: 'center' },
 });

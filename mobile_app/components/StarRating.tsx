@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
+import { Action } from './DesignSystem';
 /**
  * StarRating — tappable 1–5 star control.
  */
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View,  StyleSheet } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { useTheme } from '../hooks/useTheme';
 
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export default function StarRating({ value, onChange, size = 34, max = 5 }: Props) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const [hover, setHover] = React.useState(0);
 
@@ -24,8 +27,10 @@ export default function StarRating({ value, onChange, size = 34, max = 5 }: Prop
         const idx = i + 1;
         const filled = idx <= active;
         return (
-          <Pressable
+          <Action
             key={idx}
+            accessibilityLabel={t('accessibility.rating', { value: idx, max })}
+            accessibilityState={{ selected: idx === value }}
             onPress={() => onChange(idx)}
             onPressIn={() => setHover(idx)}
             onPressOut={() => setHover(0)}
@@ -33,11 +38,11 @@ export default function StarRating({ value, onChange, size = 34, max = 5 }: Prop
           >
             <Star
               size={size}
-              color={filled ? '#fbbf24' : colors.border}
-              fill={filled ? '#fbbf24' : 'transparent'}
+              color={filled ? colors.accentAmber : colors.border}
+              fill={filled ? colors.accentAmber : 'transparent'}
               strokeWidth={2}
             />
-          </Pressable>
+          </Action>
         );
       })}
     </View>

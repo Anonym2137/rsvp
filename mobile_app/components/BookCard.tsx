@@ -1,3 +1,4 @@
+import { Action } from './DesignSystem';
 /**
  * BookCard — compact book entry for list views.
  * Shows cover, title, author, progress bar, and (when rated) a star badge.
@@ -5,7 +6,7 @@
  * Unrated books open the reader directly on tap.
  */
 import React from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image,  StyleSheet } from 'react-native';
 import { BookOpen, Star } from 'lucide-react-native';
 import ProgressBar from './ProgressBar';
 import { useTheme } from '../hooks/useTheme';
@@ -30,7 +31,7 @@ export default function BookCard({ book, onSelect, onOpenActions }: Props) {
 
   return (
     <View style={styles.cardWrapper}>
-      <Pressable
+      <Action
         onPress={handlePress}
         onLongPress={() => onOpenActions(book.id)}
         style={({ pressed }) => [
@@ -79,7 +80,7 @@ export default function BookCard({ book, onSelect, onOpenActions }: Props) {
             <ProgressBar value={book.progress} height={6} />
           </View>
         </View>
-      </Pressable>
+      </Action>
     </View>
   );
 }
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: 14,
-    borderRadius: 20,
+    borderRadius: 28,
     borderWidth: 1,
     gap: 16,
   },
@@ -129,12 +130,12 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   title: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
-    lineHeight: 18,
+    lineHeight: 22,
   },
   author: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
   },
   progressContainer: {
@@ -146,10 +147,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressLabel: {
-    fontSize: 10,
+    fontSize: 12,
   },
   progressValue: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
   },
 });

@@ -1,3 +1,4 @@
+import { Action, Sheet } from './DesignSystem';
 /**
  * ShareStorySheet — bottom sheet for sharing a finished/rated book.
  *
@@ -8,7 +9,7 @@
  * fall back to the system share sheet (text + captured image when possible).
  */
 import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, NativeModules, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, NativeModules, StatusBar } from 'react-native';
 import Constants from 'expo-constants';
 import { Share2, Send, X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -31,10 +32,10 @@ interface ShareTargetButtonProps {
 
 function ShareTargetButton({ icon, label, backgroundColor, onPress }: ShareTargetButtonProps) {
   return (
-    <Pressable onPress={onPress} style={[styles.shareTarget, { backgroundColor }]}>
+    <Action onPress={onPress} style={[styles.shareTarget, { backgroundColor }]}>
       <View style={styles.shareTargetIcon}>{icon}</View>
       <Text style={styles.shareTargetLabel}>{label}</Text>
-    </Pressable>
+    </Action>
   );
 }
 
@@ -165,11 +166,9 @@ export default function ShareStorySheet({
   if (!visible) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 200 }]} pointerEvents="box-none">
+    <>
       <StatusBar hidden />
-      <View style={styles.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Sheet visible={visible} onClose={onClose}>
           <Text style={[styles.title, { color: colors.foreground }]}>
             {t('completion.shareStory')}
           </Text>
@@ -224,16 +223,15 @@ export default function ShareStorySheet({
             />
           </View>
 
-          <Pressable
+          <Action
             onPress={onClose}
             style={[styles.cancel, { borderColor: colors.border }]}
           >
             <Text style={[styles.cancelText, { color: colors.foreground }]}>
               {t('common.cancel')}
             </Text>
-          </Pressable>
-        </View>
-      </View>
+          </Action>
+      </Sheet>
 
       {/* Off-screen card captured for the story share (native builds only) */}
       {NATIVE_SHARING && (
@@ -247,7 +245,7 @@ export default function ShareStorySheet({
           />
         </View>
       )}
-    </View>
+    </>
   );
 }
 
@@ -278,13 +276,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   note: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
     lineHeight: 16,
     marginBottom: 12,
   },
   error: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
     marginBottom: 12,
   },
@@ -315,7 +313,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   shareTargetLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: '#ffffff',
   },
@@ -328,7 +326,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cancelText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   // Off-screen host for the captured story card

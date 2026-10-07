@@ -1,40 +1,19 @@
+import StateAnimation from './StateAnimation';
+import { Action, Surface } from './DesignSystem';
 /**
  * CompletionCelebration — full-screen overlay shown when a book finishes.
- * Renders an animated confetti burst, a celebratory card, a star rating,
+ * Renders a reduced-motion-aware celebration, a celebratory card, a star rating,
  * a "Share to Stories" action (delegated to ShareStorySheet), and restart.
  */
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, Pressable, StyleSheet, Dimensions, Vibration, StatusBar,
+  View, Text, StyleSheet, ScrollView, StatusBar,
 } from 'react-native';
-import Animated, {
-  useSharedValue, useAnimatedStyle, withTiming, withSpring,
-  interpolate, Easing,
-} from 'react-native-reanimated';
-import type { SharedValue } from 'react-native-reanimated';
-import { Check, RotateCcw, X, Share2 } from 'lucide-react-native';
+import { X, Share2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../hooks/useTheme';
 import StarRating from './StarRating';
 import ShareStorySheet from './ShareStorySheet';
-
-const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
-
-const CONFETTI_COLORS = [
-  '#6366f1', '#818cf8', '#34d399', '#fbbf24', '#f472b6',
-  '#38bdf8', '#a78bfa', '#fb7185',
-];
-
-interface Particle {
-  id: number;
-  color: string;
-  startX: number;      // percentage 0-100
-  endX: number;        // percentage 0-100
-  size: number;
-  delay: number;       // fraction of total duration 0-0.4
-  spin: number;        // total rotation in degrees
-  round: boolean;
-}
 
 interface Props {
   visible: boolean;
@@ -46,55 +25,6 @@ interface Props {
   onRate: (rating: number) => void;
   onRestart: () => void;
   onClose: () => void;
-}
-
-function buildParticles(count: number): Particle[] {
-  return Array.from({ length: count }).map((_, i) => ({
-    id: i,
-    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
-    startX: Math.random() * 100,
-    endX: Math.random() * 100,
-    size: 8 + Math.random() * 8,
-    delay: Math.random() * 0.4,
-    spin: (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 540),
-    round: Math.random() > 0.6,
-  }));
-}
-
-function ConfettiPiece({ p, t }: { p: Particle; t: SharedValue<number> }) {
-  const style = useAnimatedStyle(() => {
-    const local = interpolate(t.value, [p.delay, 1], [0, 1], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    });
-    const fallDist = SCREEN_H + 80;
-    const y = interpolate(local, [0, 1], [-40, fallDist]);
-    const x = interpolate(local, [0, 1], [p.startX, p.endX]) * (SCREEN_W / 100);
-    const rotate = interpolate(local, [0, 1], [0, p.spin]);
-    const opacity = interpolate(local, [0, 0.08, 0.8, 1], [0, 1, 1, 0]);
-    return {
-      opacity,
-      transform: [{ translateX: x - SCREEN_W / 2 }, { translateY: y }, { rotate: `${rotate}deg` }],
-    };
-  });
-
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        {
-          position: 'absolute',
-          top: 0,
-          left: SCREEN_W / 2,
-          width: p.size,
-          height: p.size,
-          backgroundColor: p.color,
-          borderRadius: p.round ? p.size / 2 : 2,
-        },
-        style,
-      ]}
-    />
-  );
 }
 
 export default function CompletionCelebration({
@@ -111,33 +41,12 @@ export default function CompletionCelebration({
   const { t } = useTranslation();
   const { colors } = useTheme();
 
-  const particles = useMemo(() => buildParticles(28), []);
-  const burst = useSharedValue(0);
-  const cardScale = useSharedValue(0.85);
-  const cardOpacity = useSharedValue(0);
-
   const [rating, setRating] = useState(initialRating);
   const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
-    if (visible) {
-      setRating(initialRating);
-      setShareOpen(false);
-      burst.value = 0;
-      burst.value = withTiming(1, { duration: 2600, easing: Easing.linear });
-      cardScale.value = withSpring(1, { damping: 14, stiffness: 180 });
-      cardOpacity.value = withTiming(1, { duration: 260 });
-      Vibration.vibrate([0, 70, 40, 130]);
-    } else {
-      cardScale.value = 0.85;
-      cardOpacity.value = 0;
-    }
-  }, [visible, initialRating, burst, cardScale, cardOpacity]);
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: cardScale.value }],
-    opacity: cardOpacity.value,
-  }));
+    if (visible) { setRating(initialRating); setShareOpen(false); }
+  }, [visible, initialRating]);
 
   const handleRate = useCallback((value: number) => {
     setRating(value);
@@ -149,16 +58,9 @@ export default function CompletionCelebration({
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]} pointerEvents="box-none">
       <StatusBar hidden />
-      {/* Confetti layer */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {particles.map((p) => (
-          <ConfettiPiece key={p.id} p={p} t={burst} />
-        ))}
-      </View>
-
       {/* Backdrop + card */}
-      <View style={styles.backdrop}>
-        <Animated.View
+      <ScrollView contentContainerStyle={styles.backdrop}>
+        <Surface
           style={[
             styles.card,
             {
@@ -166,12 +68,10 @@ export default function CompletionCelebration({
               borderColor: colors.border,
               shadowColor: colors.primary,
             },
-            cardStyle,
+
           ]}
         >
-          <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-            <Check size={34} color={colors.primaryFg} strokeWidth={3} />
-          </View>
+          <StateAnimation kind="completion" size={120} visible={!shareOpen} />
 
           <Text style={[styles.title, { color: colors.foreground }]}>
             {t('completion.title')}
@@ -189,7 +89,7 @@ export default function CompletionCelebration({
           </View>
 
           <View style={styles.actions}>
-            <Pressable
+            <Action
               onPress={() => setShareOpen(true)}
               style={[
                 styles.actionBtn,
@@ -201,9 +101,9 @@ export default function CompletionCelebration({
                 <Text style={[styles.actionText, { color: '#ffffff' }]}>
                   {t('completion.shareStory')}
                 </Text>
-              </Pressable>
+              </Action>
 
-            <Pressable
+            <Action
               onPress={onClose}
               style={[
                 styles.actionBtn,
@@ -215,16 +115,16 @@ export default function CompletionCelebration({
               <Text style={[styles.actionText, { color: colors.foreground }]}>
                 {t('completion.close')}
               </Text>
-            </Pressable>
+            </Action>
           </View>
 
-          <Pressable onPress={onRestart} style={styles.restartLink}>
+          <Action onPress={onRestart} style={styles.restartLink}>
             <Text style={[styles.restartLinkText, { color: colors.primary }]}>
               {t('completion.restart')}
             </Text>
-          </Pressable>
-        </Animated.View>
-      </View>
+          </Action>
+        </Surface>
+      </ScrollView>
 
       <ShareStorySheet
         visible={shareOpen}
@@ -240,7 +140,8 @@ export default function CompletionCelebration({
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFill,
+    flexGrow: 1,
+    paddingVertical: 24,
     backgroundColor: 'rgba(9, 13, 22, 0.72)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -268,13 +169,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -285,7 +186,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ratingPrompt: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
   },
   actions: {
@@ -314,11 +215,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   restartLinkText: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '700',
   },
   actionText: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '700',
   },
 });

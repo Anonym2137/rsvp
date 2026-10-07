@@ -27,7 +27,7 @@ export default function RsvpWord({ word, fontSize = 28 }: Props) {
 
 const styles = StyleSheet.create({
   base: {
-    fontFamily: 'Inter',
+    fontFamily: 'SpaceMono',
     fontWeight: '700',
     letterSpacing: 1.5,
     textAlign: 'center',

@@ -1,10 +1,13 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import StateAnimation from './StateAnimation';
+import { Action, Surface } from './DesignSystem';
 /** In-app browser that downloads EPUB/TXT into private storage and awaits import. */
 import React, { useRef, useCallback, useState } from 'react'
 import {
   Modal,
   View,
   Text,
-  Pressable,
+
   StyleSheet,
   ActivityIndicator,
   Alert,
@@ -32,6 +35,7 @@ function isDownloadableUrl(url: string): boolean {
 }
 
 export default function DownloadWebViewModal({ visible, url, onClose, onFileDownloaded }: Props) {
+  const insets = useSafeAreaInsets()
   const { t } = useTranslation()
   const { colors } = useTheme()
   const [isLoading, setIsLoading] = useState(true)
@@ -98,10 +102,10 @@ export default function DownloadWebViewModal({ visible, url, onClose, onFileDown
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Top bar */}
-        <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-          <Pressable onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
+        <View style={[styles.topBar, { paddingTop: insets.top + 12, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+          <Action accessibilityLabel={t('common.cancel')} onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.surface2 }]}>
             <X size={18} color={colors.mutedFg} />
-          </Pressable>
+          </Action>
           <View style={styles.titleWrap}>
             <Text style={[styles.topBarTitle, { color: colors.foreground }]} numberOfLines={1}>
               {pageTitle || 'Anna\'s Archive'}
@@ -116,7 +120,7 @@ export default function DownloadWebViewModal({ visible, url, onClose, onFileDown
         {/* Download progress overlay */}
         {isDownloading && (
           <View style={[styles.downloadOverlay, { backgroundColor: colors.background }]}>
-            <View style={[styles.downloadCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Surface style={[styles.downloadCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={[styles.downloadIconBox, { backgroundColor: colors.primary + '22' }]}>
                 <Download size={28} color={colors.primary} />
               </View>
@@ -124,8 +128,8 @@ export default function DownloadWebViewModal({ visible, url, onClose, onFileDown
               <Text style={[styles.downloadDesc, { color: colors.mutedFg }]}>
                 {t('bookDownload.importHint')}
               </Text>
-              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 8 }} />
-            </View>
+              <StateAnimation kind="loading" size={80} visible={visible} />
+            </Surface>
           </View>
         )}
 
@@ -166,7 +170,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     gap: 12,
-    paddingTop: 48, // safe area top approx
   },
   closeBtn: {
     width: 36,
@@ -179,11 +182,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topBarTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   topBarHint: {
-    fontSize: 10,
+    fontSize: 12,
     marginTop: 1,
   },
   spinner: {
@@ -201,7 +204,7 @@ const styles = StyleSheet.create({
   },
   downloadCard: {
     width: '100%',
-    borderRadius: 24,
+    borderRadius: 32,
     borderWidth: 1,
     padding: 28,
     alignItems: 'center',
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
   downloadIconBox: {
     width: 64,
     height: 64,
-    borderRadius: 20,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -220,7 +223,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   downloadDesc: {
-    fontSize: 13,
+    fontSize: 15,
     textAlign: 'center',
     lineHeight: 20,
   },

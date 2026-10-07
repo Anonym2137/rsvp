@@ -124,7 +124,12 @@
       "wpm": "WPM",
       "pcs": "pcs.",
       "days": "days"
-    }
+    },
+    "activity": "This week",
+    "activitySummary": "{{minutes}} min read in the last 7 days",
+    "activityDay": "{{day}}: {{minutes}} min",
+    "words": "Words read",
+    "weekEmpty": "Your next reading session will appear here."
   },
   "reader": {
     "loading": "Loading chapters…",
@@ -210,5 +215,12 @@
     "hint": "Download an EPUB or TXT to add it directly to your library",
     "progress": "Downloading and importing…",
     "importHint": "The book will appear in your library when the import finishes."
+  },
+  "accessibility": {
+    "back": "Back",
+    "rating": "Rate {{value}} out of {{max}} stars"
+  },
+  "shareCard": {
+    "completed": "READ"
   }
 }

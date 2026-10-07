@@ -1,10 +1,13 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
+import StateAnimation from './StateAnimation';
+import { Action, Field } from './DesignSystem';
 /**
  * AddBookModal — dialog for adding books via phone storage, online search, or pasting text.
  */
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, Pressable, Modal, StyleSheet,
-  ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform,
+  View, Text,  Modal, StyleSheet,
+  Alert, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -107,6 +110,7 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
       <KeyboardAvoidingView
         style={[styles.sheet, { backgroundColor: colors.surface }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -114,25 +118,25 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <Text style={[styles.headerTitle, { color: colors.foreground }]}>{tab === 'search' ? t('addBook.onlineTab') : tab === 'file' ? t('addBook.epubTab') : t('addBook.title')}</Text>
-          <Pressable onPress={handleClose} style={[styles.closeBtn, { backgroundColor: colors.surface3 }]}>
+          <Action accessibilityLabel={t('common.cancel')} onPress={handleClose} style={[styles.closeBtn, { backgroundColor: colors.surface3 }]}>
             <X size={18} color={colors.mutedFg} />
-          </Pressable>
+          </Action>
         </View>
 
         {isLoading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <StateAnimation kind="loading" size={80} visible={visible} />
             <Text style={[styles.loadingText, { color: colors.mutedFg }]}>{loadingMessage}</Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             {/* Tab selector */}
             <View style={[styles.tabs, { backgroundColor: colors.surface2 }]}>
-              <Pressable onPress={() => setTab('file')} style={[styles.tabBtn, tab === 'file' && { backgroundColor: colors.surface }]}>
+              <Action onPress={() => setTab('file')} style={[styles.tabBtn, tab === 'file' && { backgroundColor: colors.surface }]}>
                 <Upload size={15} color={tab === 'file' ? colors.primary : colors.mutedFg} />
                 <Text style={[styles.tabLabel, { color: tab === 'file' ? colors.primary : colors.mutedFg }]}>{t('addBook.epubTab')}</Text>
-              </Pressable>
-              <Pressable
+              </Action>
+              <Action
                 onPress={() => setTab('search')}
                 style={[styles.tabBtn, tab === 'search' && { backgroundColor: colors.surface }]}
               >
@@ -140,8 +144,8 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
                 <Text style={[styles.tabLabel, { color: tab === 'search' ? colors.primary : colors.mutedFg }]}>
                   {t('addBook.onlineTab')}
                 </Text>
-              </Pressable>
-              <Pressable
+              </Action>
+              <Action
                 onPress={() => setTab('text')}
                 style={[styles.tabBtn, tab === 'text' && { backgroundColor: colors.surface }]}
               >
@@ -149,34 +153,34 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
                 <Text style={[styles.tabLabel, { color: tab === 'text' ? colors.primary : colors.mutedFg }]}>
                   {t('addBook.textTab')}
                 </Text>
-              </Pressable>
+              </Action>
             </View>
 
             {tab === 'file' ? (
               <View style={styles.tabContent}>
                 <Text style={[styles.desc, { color: colors.mutedFg }]}>{t('addBook.fileDesc')}</Text>
-                <Pressable onPress={handlePickFile} style={[styles.pickBtn, { backgroundColor: colors.primary }]}>
+                <Action onPress={handlePickFile} style={[styles.pickBtn, { backgroundColor: colors.primary }]}>
                   <Upload size={20} color={colors.primaryFg} />
                   <Text style={[styles.pickBtnText, { color: colors.primaryFg }]}>{t('addBook.chooseFile')}</Text>
-                </Pressable>
+                </Action>
               </View>
             ) : tab === 'search' ? (
               <View style={styles.tabContent}>
                 <Text style={[styles.desc, { color: colors.mutedFg }]}>
                   {t('addBook.onlineDesc')}
                 </Text>
-                <Pressable
+                <Action
                   onPress={() => { handleClose(); router.push('/(tabs)/explore'); }}
                   style={[styles.pickBtn, { backgroundColor: colors.primary }]}
                 >
                   <Search size={20} color={colors.primaryFg} />
                   <Text style={[styles.pickBtnText, { color: colors.primaryFg }]}>{t('addBook.searchBooks')}</Text>
-                </Pressable>
+                </Action>
               </View>
             ) : (
               <View style={styles.tabContent}>
                 <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>{t('addBook.bookTitle')}</Text>
-                <TextInput
+                <Field
                   style={[styles.input, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.foreground }]}
                   placeholder={t('addBook.bookTitlePlaceholder')}
                   placeholderTextColor={colors.mutedFg}
@@ -184,7 +188,7 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
                   onChangeText={setTitle}
                 />
                 <Text style={[styles.inputLabel, { color: colors.mutedFg, marginTop: 12 }]}>{t('addBook.content')}</Text>
-                <TextInput
+                <Field
                   style={[styles.textarea, { backgroundColor: colors.surface2, borderColor: colors.border, color: colors.foreground }]}
                   placeholder={t('addBook.contentPlaceholder')}
                   placeholderTextColor={colors.mutedFg}
@@ -194,17 +198,18 @@ export default function AddBookModal({ visible, onClose, onAdded }: Props) {
                   numberOfLines={6}
                   textAlignVertical="top"
                 />
-                <Pressable
+                <Action
                   onPress={handleAddText}
                   style={[styles.pickBtn, { backgroundColor: colors.primary }]}
                 >
                   <Text style={[styles.pickBtnText, { color: colors.primaryFg }]}>{t('addBook.submit')}</Text>
-                </Pressable>
+                </Action>
               </View>
             )}
           </ScrollView>
         )}
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -241,7 +246,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: 16,
   },
   body: {
     padding: 20,
@@ -255,22 +260,24 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 12,
   },
   tabLabel: {
-    fontSize: 13,
+    textAlign: 'center',
+    fontSize: 15,
     fontWeight: '600',
   },
   tabContent: {
     gap: 12,
   },
   desc: {
-    fontSize: 13,
+    fontSize: 15,
     lineHeight: 20,
   },
   pickBtn: {
@@ -286,7 +293,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   inputLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
   input: {
@@ -294,14 +301,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 14,
+    fontSize: 16,
   },
   textarea: {
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 14,
+    fontSize: 16,
     height: 140,
   },
 });

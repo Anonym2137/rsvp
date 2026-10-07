@@ -1,11 +1,14 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, ThemeProvider as NavigationThemeProvider, DarkTheme, DefaultTheme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../hooks/useTheme';
 import '../services/i18n';
+
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import '@/globals.css';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,12 +38,14 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { isDark } = useTheme();
+  const { isDark, theme, colors } = useTheme();
+  const navigationTheme = { ...(isDark ? DarkTheme : DefaultTheme), colors: { ...(isDark ? DarkTheme : DefaultTheme).colors, background: colors.background, card: colors.surface, text: colors.foreground, border: colors.border, primary: colors.primary } };
 
   return (
-    <>
+    <NavigationThemeProvider value={navigationTheme}>
+    <GluestackUIProvider mode={theme}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="reader/[id]"
@@ -51,6 +56,7 @@ function RootLayoutNav() {
           }}
         />
       </Stack>
-    </>
+    </GluestackUIProvider>
+    </NavigationThemeProvider>
   );
 }

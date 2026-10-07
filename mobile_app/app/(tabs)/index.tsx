@@ -1,6 +1,9 @@
+import { Design } from '../../constants/theme';
+import StateAnimation from '../../components/StateAnimation';
+import { ScreenHeader, StatusBadge, Action, Surface } from '../../components/DesignSystem';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, ScrollView, Pressable, Image, StyleSheet, RefreshControl,
+  View, Text, ScrollView, Image, StyleSheet, RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,31 +59,19 @@ export default function HomeScreen() {
   const recommended = (books ?? []).filter((b) => !currentBook || b.id !== currentBook.id).slice(0, 5);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.welcomeText, { color: colors.mutedFg }]}>{t('home.welcome')}</Text>
-            <Text style={[styles.title, { color: colors.foreground }]}>
-              RSVP <Text style={{ color: colors.primary }}>Reader</Text>
-            </Text>
-          </View>
-
-          <Pressable
-            onPress={() => router.push('/settings')}
-            style={[styles.iconBtn, { backgroundColor: colors.surface2, borderColor: colors.border }]}
-          >
-            <Settings2 size={20} color={colors.foreground} />
-          </Pressable>
-        </View>
+        <ScreenHeader title="RSVP Reader" subtitle={t('home.welcome')}
+          action={<Action accessibilityLabel={t('settings.title')} onPress={() => router.push('/settings')}
+            style={[styles.iconBtn, { backgroundColor: colors.primaryMuted }]}><Settings2 size={20} color={colors.primary} /></Action>} />
 
         {/* Today's Stats */}
         <View style={styles.statsRow}>
-          <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Surface style={[styles.statBox, { backgroundColor: colors.accentEmeraldMuted, borderColor: colors.accentEmeraldMuted }]}>
             <View style={styles.statBoxHeader}>
               <Text style={[styles.statBoxLabel, { color: colors.mutedFg }]}>{t('home.timeToday')}</Text>
               <View style={[styles.iconBadge, { backgroundColor: colors.accentEmeraldMuted }]}>
@@ -90,9 +81,9 @@ export default function HomeScreen() {
             <Text style={[styles.statBoxVal, { color: colors.foreground }]}>
               {stats.totalMinutes} <Text style={[styles.statBoxUnit, { color: colors.mutedFg }]}>{t('stats.unit.min')}</Text>
             </Text>
-          </View>
+          </Surface>
 
-          <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Surface style={[styles.statBox, { backgroundColor: colors.primaryMuted, borderColor: colors.primaryMuted }]}>
             <View style={styles.statBoxHeader}>
               <Text style={[styles.statBoxLabel, { color: colors.mutedFg }]}>{t('home.maxWpm')}</Text>
               <View style={[styles.iconBadge, { backgroundColor: colors.primaryMuted }]}>
@@ -102,28 +93,28 @@ export default function HomeScreen() {
             <Text style={[styles.statBoxVal, { color: colors.foreground }]}>
               {stats.maxWpm} <Text style={[styles.statBoxUnit, { color: colors.mutedFg }]}>{t('stats.unit.wpm')}</Text>
             </Text>
-          </View>
+          </Surface>
         </View>
 
         {/* Currently Reading Section */}
         <View style={styles.section}>
           {!currentBook ? (
-            <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <BookOpen size={48} color={colors.primary} style={{ opacity: 0.4, marginBottom: 12 }} />
+            <Surface style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <StateAnimation kind="book" />
               <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t('home.noBooks')}</Text>
               <Text style={[styles.emptyDesc, { color: colors.mutedFg }]}>
                 {t('home.noBooksDesc')}
               </Text>
-              <Pressable
+              <Action
                 onPress={() => setAddModalVisible(true)}
                 style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
               >
                 <Search size={16} color={colors.primaryFg} />
                 <Text style={[styles.primaryBtnText, { color: colors.primaryFg }]}>{t('library.discoverBooks')}</Text>
-              </Pressable>
-            </View>
+              </Action>
+            </Surface>
           ) : (
-            <View style={[styles.currentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Surface style={[styles.currentCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {/* Info Header */}
               <View style={styles.bookInfoHeader}>
                 <View style={[styles.coverWrap, { backgroundColor: colors.surface3, borderColor: colors.border }]}>
@@ -135,10 +126,10 @@ export default function HomeScreen() {
                 </View>
 
                 <View style={styles.bookMeta}>
-                  <View style={[styles.badge, { backgroundColor: colors.primaryMuted }]}>
+                  <StatusBadge>
                     <Zap size={12} color={colors.primary} />
                     <Text style={[styles.badgeText, { color: colors.primary }]}>{t('home.readingNow')}</Text>
-                  </View>
+                  </StatusBadge>
                   <Text style={[styles.bookTitle, { color: colors.foreground }]} numberOfLines={2}>
                     {currentBook.title}
                   </Text>
@@ -171,14 +162,14 @@ export default function HomeScreen() {
               </View>
 
               {/* Open full reader */}
-              <Pressable
+              <Action
                 onPress={() => router.push(`/reader/${currentBook.id}`)}
                 style={[styles.openReaderBtn, { borderTopColor: colors.border }]}
               >
                 <Maximize2 size={16} color={colors.primary} />
                 <Text style={[styles.openReaderText, { color: colors.primary }]}>{t('home.openReader')}</Text>
-              </Pressable>
-            </View>
+              </Action>
+            </Surface>
           )}
         </View>
 
@@ -187,14 +178,14 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t('home.fromLibrary')}</Text>
-              <Pressable onPress={() => router.push('/library')}>
+              <Action onPress={() => router.push('/library')}>
                 <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('home.allBooks')}</Text>
-              </Pressable>
+              </Action>
             </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollList}>
               {recommended.map((b) => (
-                <Pressable
+                <Action
                   key={b.id}
                   onPress={async () => {
                     await selectBook(b.id);
@@ -215,7 +206,7 @@ export default function HomeScreen() {
                   <Text style={[styles.recAuthor, { color: colors.mutedFg }]} numberOfLines={1}>
                     {b.author}
                   </Text>
-                </Pressable>
+                </Action>
               ))}
             </ScrollView>
           </View>
@@ -240,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 20,
+    padding: Design.spacing.lg,
     paddingBottom: 40,
     gap: 16,
   },
@@ -250,11 +241,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   welcomeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '800',
   },
   iconBtn: {
@@ -271,7 +262,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 28,
     padding: 14,
     borderWidth: 1,
   },
@@ -282,7 +273,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statBoxLabel: {
-    fontSize: 12,
+    flex: 1,
+    minWidth: 0,
+    flexShrink: 1,
+    fontSize: 14,
     fontWeight: '500',
   },
   iconBadge: {
@@ -295,14 +289,14 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   statBoxUnit: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '400',
   },
   section: {
     marginTop: 4,
   },
   emptyCard: {
-    borderRadius: 24,
+    borderRadius: 32,
     padding: 32,
     borderWidth: 1,
     alignItems: 'center',
@@ -314,25 +308,27 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   emptyDesc: {
-    fontSize: 13,
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 20,
-    lineHeight: 18,
+    lineHeight: 22,
   },
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: Design.spacing.lg,
     paddingVertical: 12,
     borderRadius: 16,
   },
   primaryBtnText: {
-    fontSize: 14,
+    flexShrink: 1,
+    textAlign: 'center',
+    fontSize: 16,
     fontWeight: '700',
   },
   currentCard: {
-    borderRadius: 24,
+    borderRadius: 32,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -356,6 +352,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   bookMeta: {
+    minWidth: 0,
     flex: 1,
     justifyContent: 'space-between',
   },
@@ -370,17 +367,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   badgeText: {
-    fontSize: 9,
+    flexShrink: 1,
+    fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   bookTitle: {
     fontSize: 15,
     fontWeight: '700',
-    lineHeight: 19,
+    lineHeight: 23,
   },
   bookAuthor: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
   },
   progressWrap: {
@@ -392,10 +390,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   progressLabel: {
-    fontSize: 10,
+    fontSize: 12,
   },
   progressValue: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '600',
   },
   playerPadding: {
@@ -411,7 +409,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   openReaderText: {
-    fontSize: 13,
+    flexShrink: 1,
+    textAlign: 'center',
+    fontSize: 15,
     fontWeight: '700',
   },
   sectionHeader: {
@@ -421,11 +421,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   seeAllText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
   scrollList: {
@@ -445,11 +445,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   recTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '700',
   },
   recAuthor: {
-    fontSize: 10,
+    fontSize: 12,
     marginTop: 2,
   },
 });

@@ -1,10 +1,14 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
+import { Text, useWindowDimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Home, BookOpen, Search, BarChart2, Settings2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const { fontScale } = useWindowDimensions();
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -12,19 +16,22 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        sceneStyle: { backgroundColor: colors.background },
         tabBarActiveTintColor: colors.primary,
+        tabBarLabel: ({ children, color }) => <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} maxFontSizeMultiplier={1.5} style={{ color, fontSize: 11, fontWeight: '600', textAlign: 'center', maxWidth: '100%' }}>{children}</Text>,
         tabBarInactiveTintColor: colors.mutedFg,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 68 + Math.min(fontScale, 1.5) * 12 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 12),
+          paddingTop: 10,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: '600',
-          textTransform: 'uppercase',
         },
       }}
     >

@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { Design } from '../../constants/theme';
+import StateAnimation from '../../components/StateAnimation';
+import { ScreenHeader, Surface } from '../../components/DesignSystem';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart2, Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../hooks/useTheme';
-import StatCard from '../../components/StatCard';
+import ReadingActivityChart from '../../components/ReadingActivityChart';
+import { readingActivity } from '../../utils/readingActivity';
+import { useFocusEffect } from 'expo-router';
 import StarRating from '../../components/StarRating';
 import * as db from '../../db/database';
 import type { RatedBook } from '../../db/database';
@@ -21,12 +26,14 @@ export default function StatsScreen() {
     totalWordsRead: 0,
   });
   const [ratedBooks, setRatedBooks] = useState<RatedBook[]>([]);
+  const [activity, setActivity] = useState(() => readingActivity([]));
   const [refreshing, setRefreshing] = useState(false);
 
   const loadStats = useCallback(async () => {
     try {
       const data = await db.getStats();
       setStats(data);
+      setActivity(readingActivity(await db.getRecentReadingSessions()));
     } catch (e) {
       console.error('Failed to load stats:', e);
     }
@@ -38,9 +45,9 @@ export default function StatsScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
+  useFocusEffect(useCallback(() => {
+    void loadStats();
+  }, [loadStats]));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -49,58 +56,38 @@ export default function StatsScreen() {
   }, [loadStats]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={styles.container}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t('stats.title')}</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-            {t('stats.subtitle')}
-          </Text>
-        </View>
+        <View style={{ paddingHorizontal: 0 }}><ScreenHeader title={t('stats.title')} subtitle={t('stats.subtitle')} /></View>
 
-        {/* 2x2 Grid */}
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <StatCard
-              label={t('stats.totalTime')}
-              value={String(stats.totalMinutes)}
-              unit={t('stats.unit.min')}
-              icon="Timer"
-              accent="indigo"
-            />
-          </View>
-          <View style={styles.gridItem}>
-            <StatCard
-              label={t('stats.maxSpeed')}
-              value={String(stats.maxWpm)}
-              unit={t('stats.unit.wpm')}
-              icon="Gauge"
-              accent="emerald"
-            />
-          </View>
-          <View style={styles.gridItem}>
-            <StatCard
-              label={t('stats.books')}
-              value={String(stats.booksCount)}
-              unit={t('stats.unit.pcs')}
-              icon="BookOpen"
-              accent="indigo"
-            />
-          </View>
-          <View style={styles.gridItem}>
-            <StatCard
-              label={t('stats.streak')}
-              value={String(stats.streak)}
-              unit={t('stats.unit.days')}
-              icon="Flame"
-              accent="amber"
-            />
-          </View>
-        </View>
+        <Surface style={{ padding: 24, gap: 12, backgroundColor: colors.primaryMuted }}>
+          <Text style={{ color: colors.mutedFg, fontSize: 15 }}>{t('stats.totalTime')}</Text>
+          <Text style={{ color: colors.foreground, fontSize: 44, fontWeight: '800', fontVariant: ['tabular-nums'] }}>
+            {stats.totalMinutes.toLocaleString()} <Text style={{ fontSize: 18, fontWeight: '500' }}>{t('stats.unit.min')}</Text>
+          </Text>
+          <Text style={{ color: colors.primary, fontSize: 15 }}>{t('stats.words')}: {stats.totalWordsRead.toLocaleString()}</Text>
+        </Surface>
+
+        <Surface style={{ padding: 20, gap: 16 }}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 0 }]}>{t('stats.activity')}</Text>
+          <Text style={{ color: colors.mutedFg, fontSize: 14 }}>{t('stats.activitySummary', { minutes: Math.round(activity.reduce((sum, day) => sum + day.seconds, 0) / 60) })}</Text>
+          <ReadingActivityChart days={activity} />
+        </Surface>
+
+        <Surface style={{ paddingHorizontal: 20 }}>
+          {[
+            { label: t('stats.maxSpeed'), value: stats.maxWpm, unit: t('stats.unit.wpm'), color: colors.accentEmerald },
+            { label: t('stats.streak'), value: stats.streak, unit: t('stats.unit.days'), color: colors.accentAmber },
+            { label: t('stats.books'), value: stats.booksCount, unit: t('stats.unit.pcs'), color: colors.primary },
+          ].map((metric, index) => <View key={metric.label} style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, paddingVertical: 18, borderTopWidth: index ? 1 : 0, borderColor: colors.borderSubtle }}>
+            <Text style={{ flexGrow: 1, flexShrink: 1, color: colors.mutedFg, fontSize: 15 }}>{metric.label}</Text>
+            <Text style={{ color: metric.color, fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] }}>{metric.value.toLocaleString()} <Text style={{ fontSize: 13, fontWeight: '500' }}>{metric.unit}</Text></Text>
+          </View>)}
+        </Surface>
 
         {/* Ratings overview */}
         <View style={styles.ratingsSection}>
@@ -109,12 +96,12 @@ export default function StatsScreen() {
           </Text>
 
           {ratedBooks.length === 0 ? (
-            <View style={[styles.ratingsEmpty, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Surface style={[styles.ratingsEmpty, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Star size={28} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 8 }} />
               <Text style={[styles.ratingsEmptyText, { color: colors.mutedFg }]}>
                 {t('stats.noRatings')}
               </Text>
-            </View>
+            </Surface>
           ) : (
             <View style={styles.ratingsList}>
               {ratedBooks.map((b) => (
@@ -149,14 +136,14 @@ export default function StatsScreen() {
         </View>
 
         {/* Empty state when no reading time */}
-        {stats.totalMinutes === 0 && (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <BarChart2 size={40} color={colors.mutedFg} style={{ opacity: 0.4, marginBottom: 12 }} />
+        {stats.totalWordsRead === 0 && (
+          <Surface style={[styles.emptyBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <StateAnimation kind="book" />
             <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t('stats.noData')}</Text>
             <Text style={[styles.emptyDesc, { color: colors.mutedFg }]}>
               {t('stats.noDataDesc')}
             </Text>
-          </View>
+          </Surface>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -168,7 +155,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 20,
+    padding: Design.spacing.lg,
     paddingBottom: 30,
     gap: 16,
   },
@@ -177,20 +164,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '800',
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  gridItem: {
-    width: '48%',
   },
   ratingsSection: {
     marginTop: 8,
@@ -201,13 +180,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ratingsEmpty: {
-    borderRadius: 20,
+    borderRadius: 28,
     padding: 28,
     borderWidth: 1,
     alignItems: 'center',
   },
   ratingsEmptyText: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
   },
   ratingsList: {
@@ -236,37 +215,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ratedCoverFallbackText: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: '900',
   },
   ratedInfo: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   ratedTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
   },
   ratedAuthor: {
-    fontSize: 11,
+    fontSize: 13,
   },
   ratedStars: {
     marginTop: 2,
   },
   emptyBox: {
-    borderRadius: 24,
+    borderRadius: 32,
     padding: 32,
     borderWidth: 1,
     alignItems: 'center',
     marginTop: 8,
   },
   emptyTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
   emptyDesc: {
-    fontSize: 12,
+    fontSize: 14,
     textAlign: 'center',
   },
 });
